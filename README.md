@@ -34,19 +34,24 @@ Once the environment is set up, you can run the main script to extract and proce
 ```bash
 blood-report-extraction/
 │
-├── blood_report_extraction.py      # Main script
-├── data_preprocessing.py           # Data preprocessing module
-├── report_scanner.py               # Scanning and extraction module
-├── unit_converter.py               # Unit conversion module
-├── parameter_mapping.py            # Parameter mapping module
-├── config.py                       # Configuration file
-├── tests/                          # Test files
-│   └── test_blood_report_extraction.py  # Unit tests for blood report extraction
+├── .venv 
+├── datasets/                       # Datasets
+│   └── phrase_datasets/            # Phrase Datasets
+│       └── phrase_datasets.csv
+│       └── augmentated_phrase_dataset.csv
+│       └── medical_synonym.json
+├── models/
+├── phrase_detection_module         # Phrase detection module
+│   └── phrase_data_augmentation.py
+│   └── phrase_detection_module_local_script.py
+│   └── phrase_detection.py
+├── .gitignore
+├── LICENSE
 ├── README.md                       # Project description and setup instructions
 └── requirements.txt
 ```
 
->Currently, the project does not follow the above directory structure, and the modules are subject to change.
+>The above directory structure, and the modules are subject to change.
 
 ---
 
@@ -60,8 +65,42 @@ pytest tests/
 
 ---
 
+## Workflow Guidelines
+
+### File and Folder Naming
+
+- Use **snake_case** for all **files** and **folders**.
+  - Example: `data_processing.py`, `phrase_detection_module`
+- Name **data** and **datasets** in the **singular form**.
+  - Example: `dataset.csv`, `synonym.json`
+
+### Git Commit Guidelines
+
+- Keep commits **simple and short**, describing the change.
+  - Example: `Fix bug in data extraction`
+- **Commit frequently** at small increments.
+  - Example: `Add data preprocessing`, `Fix typo in README`
+- For **multiple changes**, separate messages with commas.
+  - Example: `Fix data loading, update training script, improve logging`
+
+### Pull Request Guidelines
+
+- Always create a **pull request** for merging changes to the `main` or *any* branch.
+- Use clear and concise PR titles and descriptions.
+  - Example: `Add data preprocessing step to pipeline`
+
+---
+
 ## License
 
 This project is proprietary and for internal use only. All rights are reserved by [Your Company/Organization Name]. Unauthorized use, reproduction, or distribution of this project is prohibited.
 
-For inquiries or permissions, please contact [Your Contact Information].
+---
+
+### Contact
+
+For inquiries or permissions, please contact the **development team**.
+
+- Sameet Patil - [LinkedIn Profile](https://www.linkedin.com/in/sameetpatil5)
+- Kartik Dani - [LinkedIn Profile](https://www.linkedin.com/in/kartik-dani-06744b257)
+- Siddhant Ingole - [LinkedIn Profile](https://www.linkedin.com/in/siddhant-ingole-70b412260/)
