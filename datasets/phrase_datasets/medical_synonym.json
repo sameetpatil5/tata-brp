@@ -1,0 +1,20 @@
+{
+    "leukocyte": ["white blood cell", "WBC", "leukocytes"],
+    "count": ["number", "tally", "measure", "calculation", "quantity"],
+    "platelet": ["Plt", "thrombocyte", "platelets"],
+    "neutrophil": ["neutrophils", "polymorph", "PMN", "segmented neutrophil"],
+    "lymphocyte": ["lymphocytes", "lymph cell"],
+    "hemoglobin": ["Hb", "haemoglobin", "Hgb"],
+    "absolute": ["total", "overall", "complete"],
+    "neutrophil count": ["ANC", "absolute neutrophil count"],
+    "lymphocyte count": ["ALC", "absolute lymphocyte count"],
+    "white cell": ["WBC", "white blood cell", "leukocyte"],
+    "total": ["overall", "sum", "aggregate"],
+    "red blood cell": ["RBC", "erythrocyte", "red cell"],
+    "hematocrit": ["Hct", "packed cell volume", "PCV"],
+    "mean corpuscular volume": ["MCV", "average red blood cell size"],
+    "mean corpuscular hemoglobin": ["MCH", "average hemoglobin per red blood cell"],
+    "mean corpuscular hemoglobin concentration": ["MCHC", "hemoglobin concentration per red blood cell"],
+    "platelet count": ["Plt count", "platelet tally"],
+    "white cell count": ["WCC", "total white cell count", "WBC count"]
+}
