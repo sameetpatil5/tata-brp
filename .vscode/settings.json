@@ -1,5 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./phrase_detection_module"
-    ]
-}
