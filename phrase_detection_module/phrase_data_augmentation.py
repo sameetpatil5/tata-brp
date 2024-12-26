@@ -101,5 +101,5 @@ augment_dataset(
     PHRASE_DATASET, 
     AUGMENTED_PHRASE_DATASET, 
     MEDICAL_SYNONYMS, 
-    use_medical_synonyms=False 
+    use_medical_synonyms=True 
 )

@@ -5,7 +5,7 @@ url = "http://127.0.0.1:5000/predict"
 
 # Define the input data
 data = {
-    "phrases": ["Total leukocyte count", "Polymorphonuclear leucocytes"]
+    "phrases": ["cell count", "Lymphocyte count", "leucocytic count", "count", "Absolute neutrophil count "]
 }
 
 # Send the POST request

@@ -1,20 +1,9 @@
 {
-    "leukocyte": ["white blood cell", "WBC", "leukocytes", "white cell"],
-    "count": ["number", "tally", "measure", "calculation", "quantity", "enumeration"],
-    "platelet": ["Plt", "thrombocyte", "platelets", "blood platelet"],
-    "neutrophil": ["neutrophils", "polymorphs", "PMN", "segmented neutrophil", "polymorphonuclear leucocytes"],
-    "lymphocyte": ["lymphocytes", "lymph cell", "lymph"],
-    "hemoglobin": ["Hb", "haemoglobin", "Hgb", "hemoglobin"],
-    "absolute": ["total", "overall", "complete", "absolute"],
-    "neutrophil count": ["ANC", "absolute neutrophil count", "Abs Neutrophil count"],
-    "lymphocyte count": ["ALC", "absolute lymphocyte count", "Abs Lymphocyte count"],
-    "white cell": ["WBC", "white blood cell", "leukocyte", "white cell count"],
-    "total": ["overall", "sum", "aggregate", "total"],
-    "red blood cell": ["RBC", "erythrocyte", "red cell"],
-    "hematocrit": ["Hct", "packed cell volume", "PCV", "hematocrit"],
-    "mean corpuscular volume": ["MCV", "average red blood cell size"],
-    "mean corpuscular hemoglobin": ["MCH", "average hemoglobin per red blood cell"],
-    "mean corpuscular hemoglobin concentration": ["MCHC", "hemoglobin concentration per red blood cell"],
-    "platelet count": ["Plt count", "platelet tally", "platelet count"],
-    "white cell count": ["WCC", "total white cell count", "WBC count", "white count"]
+    "hemoglobin": ["Hb", "haemoglobin", "Hgb", "hemoglobin level", "hemoglobin concentration"],
+    "lymphocyte": ["lymphocytes", "lymph cell", "lymph", "lymphocyte count", "T-cells", "B-cells"],
+    "neutrophil": ["neutrophils", "polymorphs", "PMN", "segmented neutrophil", "polymorphonuclear leucocytes", "granulocytes", "neutrophil percentage"],
+    "platelets": ["Plt", "thrombocytes", "platelets count", "platelet count", "platelet concentration", "thrombocyte count"],
+    "WBC count": ["WBC", "total leukocyte count", "white blood cell count", "white cell count", "total white blood cells", "leukocyte count"],
+    "WBC count x Neutrophil": ["ANC", "absolute neutrophil count", "absolute neutrophil", "neutrophil count", "neutrophil absolute count"],
+    "WBC count x lymphocyte": ["ALC", "absolute lymphocyte count", "absolute lymphocyte", "lymphocyte count", "lymphocyte absolute count"]
 }
