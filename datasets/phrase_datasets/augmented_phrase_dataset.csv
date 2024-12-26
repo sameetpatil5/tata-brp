@@ -1,78 +1,57 @@
-Phrase,Category
-overall WBC quantity,WBC count
-aggregate WBC quantity,WBC count
-Total leukocyte count,WBC count
-white blood corpuscle number,WBC count
-WBC number,WBC count
-white cell calculation,WBC count
-WBC count,WBC count
-Edward White electric cell number,WBC count
-Theodore Harold White cellular phone quantity,WBC count
-gabardine prison cell quantity,WBC count
-White cell count,WBC count
-sum white-hot mobile phone quantity,WBC count
-sum gabardine jail cell tally,WBC count
-sum Elwyn Brooks White prison cell quantity,WBC count
-Total white cell count,WBC count
-sum albumen tally,WBC count
-overall whiteness quantity,WBC count
-aggregate lily-white quantity,WBC count
-Total white count,WBC count
-platelets quantity,Platelets
-thrombocyte quantity,Platelets
-thrombocyte measure,Platelets
-Platelet count,Platelets
-thrombocyte,Platelets
-blood platelet,Platelets
-Platelets,Platelets
-Plt,Platelets
-Plt,Platelets
-segmented neutrophil %,Neutrophil %
-PMN %,Neutrophil %
-Neutrophil %,Neutrophil %
-polymorph,Neutrophil %
-Polymorphs,Neutrophil %
-Polymorphonuclear WBC,Neutrophil %
-Polymorphonuclear white cell,Neutrophil %
-Polymorphonuclear white corpuscle,Neutrophil %
-Polymorphonuclear leucocytes,Neutrophil %
-neutrophil,Neutrophil %
-neutrophile,Neutrophil %
-Neutrophils,Neutrophil %
-metameric neutrophil,Neutrophil %
-segmented neutrophil,Neutrophil %
-segment neutrophile,Neutrophil %
-Segmented neutrophils,Neutrophil %
-lymph cell %,Lymphocyte %
-lymphocytes %,Lymphocyte %
-Lymphocyte %,Lymphocyte %
-lymphocyte,Lymphocyte %
-lymph cell,Lymphocyte %
-Lymphocytes,Lymphocyte %
-haemoglobin hemoglobin,Lymphocyte %
-Hb hemoglobin,Lymphocyte %
-Hgb hemoglobin,Lymphocyte %
-Hemoglobin Haemoglobin,Lymphocyte %
-hemoglobin,Lymphocyte %
-haemoglobin,Lymphocyte %
-Hb,Lymphocyte %
-Haemoglobin,Lymphocyte %
-hemoglobin,Lymphocyte %
-Hb,Lymphocyte %
-Hb,Lymphocyte %
-complete segmented neutrophil measure (ANC),WBC count x Neutrophil %
-complete polymorph number (ANC),WBC count x Neutrophil %
-total segmented neutrophil tally (ANC),WBC count x Neutrophil %
-Absolute neutrophil count (ANC),WBC count x Neutrophil %
-AB segmented neutrophil measure,WBC count x Neutrophil %
-Av segmented neutrophil measure,WBC count x Neutrophil %
-abdominal muscle PMN measure,WBC count x Neutrophil %
-Abs Neutrophil count,WBC count x Neutrophil %
-total lymphocytes calculation (ALC),WBC count x lymphocyte %
-overall lymphocytes number (ALC),WBC count x lymphocyte %
-total lymph cell tally (ALC),WBC count x lymphocyte %
-Absolute lymphocyte count (ALC),WBC count x lymphocyte %
-abdominal lymphocytes number,WBC count x lymphocyte %
-abdominal lymphocytes calculation,WBC count x lymphocyte %
-Av lymphocytes tally,WBC count x lymphocyte %
-Abs Lymphocyte count,WBC count x lymphocyte %
+"Phrase","Category"
+"Total leukocyte count","WBC count"
+"totality white corpuscle counting","WBC count"
+"totality white blood corpuscle look","WBC count"
+"WBC count","WBC count"
+"white cell look","WBC count"
+"white blood corpuscle numeration","WBC count"
+"White cell count","WBC count"
+"blanched cadre calculate","WBC count"
+"Caucasian cellular telephone calculate","WBC count"
+"Total white cell count","WBC count"
+"amount whitened cellular phone count","WBC count"
+"add together Andrew Dickson White cubicle reckon","WBC count"
+"Total white count","WBC count"
+"totality Theodore Harold White count","WBC count"
+"sum whitened enumeration","WBC count"
+"Platelet count","Platelets"
+"blood platelet weigh","Platelets"
+"blood platelet consider","Platelets"
+"Platelets","Platelets"
+"thrombocyte","Platelets"
+"Plt","Platelets"
+"Neutrophil","Neutrophil %"
+"neutrophile","Neutrophil %"
+"neutrophil","Neutrophil %"
+"Polymorphs","Neutrophil %"
+"polymorph","Neutrophil %"
+"Polymorphonuclear leucocytes","Neutrophil %"
+"Polymorphonuclear leucocyte","Neutrophil %"
+"Polymorphonuclear leukocyte","Neutrophil %"
+"Neutrophils","Neutrophil %"
+"Segmented neutrophils","Neutrophil %"
+"segmented neutrophil","Neutrophil %"
+"section neutrophil","Neutrophil %"
+"Lymphocyte","Lymphocyte %"
+"lymphocyte","Lymphocyte %"
+"lymph cell","Lymphocyte %"
+"Lymphocytes","Lymphocyte %"
+"Hemoglobin","Haemoglobin"
+"haemoglobin","Haemoglobin"
+"Hb","Haemoglobin"
+"Haemoglobin","Haemoglobin"
+"hemoglobin","Haemoglobin"
+"Absolute neutrophil count","WBC count x Neutrophil %"
+"sheer neutrophil enumerate","WBC count x Neutrophil %"
+"rank neutrophile look","WBC count x Neutrophil %"
+"ANC","WBC count x Neutrophil %"
+"Abs Neutrophil count","WBC count x Neutrophil %"
+"type AB neutrophil reckoning","WBC count x Neutrophil %"
+"ab neutrophil bet","WBC count x Neutrophil %"
+"Absolute lymphocyte count","WBC count x lymphocyte %"
+"right-down lymphocyte matter","WBC count x lymphocyte %"
+"absolute lymph cell reckon","WBC count x lymphocyte %"
+"ALC","WBC count x lymphocyte %"
+"Abs Lymphocyte count","WBC count x lymphocyte %"
+"BA lymph cell tally","WBC count x lymphocyte %"
+"ab lymphocyte enumeration","WBC count x lymphocyte %"

@@ -1,11 +1,7 @@
 import csv, json
 import random
 from nltk.corpus import wordnet
-
-PHRASE_DATASET = "./datasets/phrase_datasets/phrase_dataset.csv"
-AUGMENTED_PHRASE_DATASET = "./datasets/phrase_datasets/augmented_phrase_dataset.csv"
-MEDICAL_SYNONYMS = "./datasets/phrase_datasets/medical_synonym.json"
-AUGMENTATION_VARIANCE = 3
+from phrase_detection_module_constants import *
 
 def get_synonyms(word: str) -> list:
     """
@@ -23,14 +19,15 @@ def get_synonyms(word: str) -> list:
             synonyms.add(lemma.name().replace('_', ' '))
     return list(synonyms)
 
-def augment_phrase(phrase: str, synonyms_dict: dict, num_augmentations: int = AUGMENTATION_VARIANCE) -> list:
+def augment_phrase(phrase: str, medical_synonyms: dict, use_medical_synonyms: bool, num_augmentations: int = AUGMENTATION_VARIANCE) -> list:
     """
     Generate augmented variations of a phrase by replacing words with synonyms.
 
     Args:
         phrase (str): The original phrase to augment.
-        synonyms_dict (dict): A dictionary where keys are words and values are lists of synonyms.
-        num_augmentations (int): The number of augmented phrases to generate. Default is 3.
+        medical_synonyms (dict): A dictionary of medical synonyms.
+        use_medical_synonyms (bool): Whether to use medical synonyms for augmentation.
+        num_augmentations (int): The number of augmented phrases to generate.
 
     Returns:
         list: A list of augmented phrases.
@@ -41,9 +38,9 @@ def augment_phrase(phrase: str, synonyms_dict: dict, num_augmentations: int = AU
     for _ in range(num_augmentations):
         new_words = words[:]
         for i, word in enumerate(words):
-            if word.lower() in synonyms_dict:
-                synonym = random.choice(synonyms_dict[word.lower()])
-                new_words[i] = synonym
+            # Use medical synonyms if enabled and available
+            if use_medical_synonyms and word.lower() in medical_synonyms:
+                new_words[i] = random.choice(medical_synonyms[word.lower()])
             else:
                 nltk_synonyms = get_synonyms(word.lower())
                 if nltk_synonyms:
@@ -52,19 +49,28 @@ def augment_phrase(phrase: str, synonyms_dict: dict, num_augmentations: int = AU
 
     return list(augmented_phrases)
 
-def augment_dataset(input_csv: str, output_csv: str, synonyms_dict: dict) -> None:
+def augment_dataset(input_csv: str, output_csv: str, medical_synonyms_path: str, use_medical_synonyms: bool) -> None:
     """
     Augment the dataset by generating variations of each phrase and saving the augmented data.
 
     Args:
         input_csv (str): Path to the input CSV file containing phrases and categories.
         output_csv (str): Path to the output CSV file to save augmented data.
-        synonyms_dict (dict): A dictionary where keys are words and values are lists of synonyms.
+        medical_synonyms_path (str): Path to the medical synonyms JSON file.
+        use_medical_synonyms (bool): Whether to use medical synonyms for augmentation.
 
     Returns:
         None: Writes the augmented data to the specified output CSV file.
     """
     augmented_data = []
+    unique_phrases = set()
+
+    # Load medical synonyms if required
+    medical_synonyms = {}
+    if use_medical_synonyms:
+        with open(medical_synonyms_path, 'r') as file:
+            medical_synonyms = json.load(file)
+
 
     with open(input_csv, 'r') as file:
         reader = csv.reader(file)
@@ -73,20 +79,27 @@ def augment_dataset(input_csv: str, output_csv: str, synonyms_dict: dict) -> Non
 
         for row in reader:
             phrase, category = row
-            augmented_phrases = augment_phrase(phrase, synonyms_dict)
+            augmented_phrases = augment_phrase(phrase, medical_synonyms, use_medical_synonyms)
+
+            # Always add the original phrase
+            if phrase not in unique_phrases:
+                augmented_data.append([phrase, category])
+                unique_phrases.add(phrase)
+
+            # Add only unique phrases (based on phrase content)
             for augmented_phrase in augmented_phrases:
-                augmented_data.append([augmented_phrase, category])
-            augmented_data.append(row)
+                if augmented_phrase not in unique_phrases:
+                    augmented_data.append([augmented_phrase, category])
+                    unique_phrases.add(augmented_phrase)
 
     with open(output_csv, 'w', newline='') as file:
-        writer = csv.writer(file)
+        writer = csv.writer(file, quoting=csv.QUOTE_ALL)
         writer.writerows(augmented_data)
 
-with open(MEDICAL_SYNONYMS, 'r') as medical_synonyms_file:
-    """
-    Load the medical synonyms dictionary from a JSON file and augment the dataset.
-
-    The dictionary is used to replace words in phrases with their medical synonyms.
-    """
-    medical_synonyms = json.load(medical_synonyms_file)
-    augment_dataset(PHRASE_DATASET, AUGMENTED_PHRASE_DATASET, medical_synonyms)
+# Augment dataset
+augment_dataset(
+    PHRASE_DATASET, 
+    AUGMENTED_PHRASE_DATASET, 
+    MEDICAL_SYNONYMS, 
+    use_medical_synonyms=False 
+)
