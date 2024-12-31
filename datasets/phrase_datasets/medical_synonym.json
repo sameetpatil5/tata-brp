@@ -1,9 +1,0 @@
-{
-    "hemoglobin": ["Hb", "haemoglobin", "Hgb", "hemoglobin level", "hemoglobin concentration"],
-    "lymphocyte": ["lymphocytes", "lymph cell", "lymph", "lymphocyte count", "T-cells", "B-cells"],
-    "neutrophil": ["neutrophils", "polymorphs", "PMN", "segmented neutrophil", "polymorphonuclear leucocytes", "granulocytes", "neutrophil percentage"],
-    "platelets": ["Plt", "thrombocytes", "platelets count", "platelet count", "platelet concentration", "thrombocyte count"],
-    "WBC count": ["WBC", "total leukocyte count", "white blood cell count", "white cell count", "total white blood cells", "leukocyte count"],
-    "WBC count x Neutrophil": ["ANC", "absolute neutrophil count", "absolute neutrophil", "neutrophil count", "neutrophil absolute count"],
-    "WBC count x lymphocyte": ["ALC", "absolute lymphocyte count", "absolute lymphocyte", "lymphocyte count", "lymphocyte absolute count"]
-}
