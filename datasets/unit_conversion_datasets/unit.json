@@ -1,9 +1,9 @@
 {
-    "WBC count": "109/L",
+    "WBC Count": "109/L",
     "Platelets": "109/L",
     "Neutrophil %": "%",
     "Lymphocyte %": "%",
     "Haemoglobin": "g/dL",
-    "WBC count x Neutrophil %": "109/L",
-    "WBC count x lymphocyte %": "109/L"
+    "WBC Count x Neutrophil %": "109/L",
+    "WBC Count x Lymphocyte %": "109/L"
 }
