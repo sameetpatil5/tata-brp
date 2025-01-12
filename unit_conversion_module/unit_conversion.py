@@ -65,19 +65,24 @@ def process_unit_conversion_with_regex(value, detected_unit, target_unit):
         print(f"Conversion factor not defined for unit: {detected_unit}")
         return None
 
+def unit_conversion(units_df: pd.DataFrame) -> dict:
+    """
+    Convert units in a DataFrame using regex patterns.
 
-# Load target units from JSON
-with open("datasets/unit_conversion_datasets/unit.json", "r") as f:
-    target_units = json.load(f)
+    Args:
+        units_df (pd.DataFrame): DataFrame containing 'Tests', 'Results' and 'Unit' columns.
 
-# Load units data from CSV
-units_df = pd.read_csv('unit_conversion_module/unit_conv(from phrase detected).csv', index_col=0)
+    Returns:
+        dict: Dictionary of Tests with thier converted Result values for target unit.
+    """
+    # Load target units from JSON
+    with open("datasets/unit_conversion_datasets/unit.json", "r") as f:
+        target_units = json.load(f)
 
-# Initialize the final data packet
-final_data_packet = {}
+    # Initialize the final data packet
+    final_data_packet = {}
 
-# print(units_df)
-for index, row in units_df.iterrows():
-    final_data_packet[index] = process_unit_conversion_with_regex(row["Results"], row["Unit"], target_units.get(index))
+    for index, row in units_df.iterrows():
+        final_data_packet[index] = process_unit_conversion_with_regex(row["Results"], row["Unit"], target_units.get(index))
 
-print(final_data_packet)
+    return final_data_packet
