@@ -1,63 +1,61 @@
-from bs4 import BeautifulSoup
 import pandas as pd
+import re
 
-def parse_chunk_to_dataframe(chunk: str) -> pd.DataFrame:
+def parse_table(table_content):
     """
-    Parses an HTML or Markdown-like chunk into a pandas DataFrame.
-    Handles cases where headers are missing by adding placeholder headers.
+    Parse a markdown table into a Pandas DataFrame.
 
-    Parameters:
-        chunk (str): The HTML or Markdown-like input string.
+    Args:
+        table_content (str): The markdown table content.
 
     Returns:
-        pd.DataFrame: The resulting DataFrame.
+        pd.DataFrame: Parsed DataFrame with columns: 'Test', 'Result', 'Unit'.
     """
-    # Try parsing as HTML table first
-    soup = BeautifulSoup(chunk, "html.parser")
-    table = soup.find("table")
+    lines = table_content.strip().split("\n")
+    start_index = 2 if ("| -" or "|-") in lines[1].strip() else 1 if ("| -" or "|-") in lines[0].strip() else 0
 
-    if table:
-        # Extract table headers if present
-        headers = [header.text.strip() for header in table.find_all("th")]
+    headers = [col.strip() for col in lines[0].split("|")[1:-1]]
 
-        # Extract table rows
-        rows = []
-        for row in table.find_all("tr"):
-            cells = [cell.text.strip() for cell in row.find_all(["td", "th"])]
-            rows.append(cells)
+    data = []
+    for line in lines[start_index:]:  # Skip header and separator lines
+        cols = [col.strip() for col in line.split("|")[1:-1]]
+        if len(cols) == 4:  # Handle properly formatted tables
+            test, result, unit, _ = cols
+        elif len(cols) == 3:  # Handle merged columns
+            test, result_unit, _ = cols
 
-        # Ensure headers are present, add placeholders if missing
-        if not headers:
-            headers = [f"Column {i+1}" for i in range(len(rows[0]))]
+            # Use regex to separate numeric result and unit
+            match = re.match(r"([\d.]+)\s+(\S.*)", result_unit)
 
-        # Create the DataFrame
-        df = pd.DataFrame(rows[1:], columns=headers)
-        return df
+            if match:
+                result = match.group(1)  # Extract the numeric part
+                unit = match.group(2)    # Extract the unit part
+            else:
+                result = result_unit
+                unit = _ or None
+        # elif len(cols) == 2:  # Handle missing columns
+        #     test, result = cols
+        #     unit = None
+        else:
+            continue
+        data.append({"Test": test, "Result": result, "Unit": unit})
 
-    # If no table, try parsing Markdown-like pipe-delimited text
-    elif "|" in chunk:
-        lines = soup.find("p").text.splitlines()
-        rows = [line.strip("|").strip().split("|") for line in lines if "|" in line.strip()]
+    # Create DataFrame and filter out irrelevant tables
+    df = pd.DataFrame(data)
 
-        print(rows)
+    # Drop tables where all columns have empty or missing values
+    if df.empty or df.isnull().all(axis=None):
+        return None
 
-        # Ensure all rows have the same number of columns
-        max_columns = max(len(row) for row in rows)
-        rows = [row + ["" for _ in range(max_columns - len(row))] for row in rows]
+    return pd.DataFrame(data)
 
-        # Extract headers if the first row looks like a header row
-        headers = rows[0] if all(cell.isalpha() or cell.isspace() for cell in rows[0]) else []
-
-        # Add placeholder headers if none exist
-        if not headers:
-            headers = [f"Column {i+1}" for i in range(len(rows[0]))]
-
-        # Skip the header row if it was detected as headers
-        data = rows[1:] if headers == rows[0] else rows
-
-        # Create the DataFrame
-        df = pd.DataFrame(data, columns=headers)
-        return df
-
-    else:
-        raise ValueError("The input chunk is not in a recognizable format.")
+if __name__ == "__main__":
+    table = """
+    | Packed Cell Volume           | 32.7 %            | 40 - 54 |
+    | Mean Corpuscular Volume      | 85.6 cubic micron | 76 - 96 |
+    | Mean Corpuscular Hemoglobin  | 29.5 picograms    | 27 - 32 |
+    | Mean corpuscular Hb Con.     | 34.5 g/dl         | 32 - 36 |
+    """
+    # table = "| **DIFFERENTIAL COUNT** |     |     |\n| ---------------------- | --- | --- |\n| Neutrophils            | 52  | %   |\n| Lymphocytes            | 39  | %   |\n| Eosinophil             | 01  | %   |\n| Monocytes              | 08  | %   |\n| Basophils              | 00  | %   |"
+    df = parse_table(table)
+    print(df)
