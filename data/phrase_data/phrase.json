@@ -4,7 +4,18 @@
     "WBC count",
     "White cell count",
     "Total white cell count",
-    "Total white count"
+    "Total white count",
+    "Total WBC Count",
+    "Total WBC",
+    "Total leukocyte count",
+    "Total leukocytes",
+    "Leucocyte count",
+    "Leukocyte count",
+    "White blood cell count",
+    "Total blood count",
+    "Total blood cell count",
+    "Total blood cells",
+    "Total blood count"
   ],
   "Platelets": ["Platelet count", "Platelets", "Plt"],
   "Neutrophil %": [
