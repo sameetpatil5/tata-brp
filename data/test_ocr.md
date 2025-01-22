@@ -1,16 +1,14 @@
-# **Shreeyash Clinical Analysis Lab**
+# **Clinical Analysis Lab**
 
 ## **Medical Lab Technical Result Sheet**
 
-### **Computerised Lab**
+### **Lab**
 
-Near S.T. Stand, A/p. Pargaon (Shingve), Tal. Ambegaon, Dist. Pune. 412406
+### **Reg No.:**
 
-### **Reg No.: 3972**
+### **NAME:**
 
-### **NAME: Rohan Rathod**
-
-### **REF BY: Dr. Ankush Khilari**
+### **REF BY**
 
 ### **AGE: Years**
 
