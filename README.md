@@ -4,15 +4,16 @@
 
 ## Overview
 
-This project is designed to automate the extraction and processing of blood report data. The goal is to extract structured information from various types of blood reports, standardize units, and provide actionable insights. The app uses Natural Language Processing (NLP) techniques to identify and map parameters from unstructured text data.
+This project automates the extraction and formatting of blood report data. It processes markdown inputs containing medical tables and ensures they are formatted correctly without altering numerical or textual data. The application uses FastAPI and requires a Gemini API key for formatting operations.
 
 ---
 
 ## Features
 
+- **Data Formatting**: Corrects formatting errors in markdown inputs using LLM.
 - **Data Extraction**: Extract key parameters from blood reports.
+- **Report Parsing**: Parse unstructured data and identifies the required phrases.
 - **Unit Standardization**: Convert units into a unified format for analysis.
-- **Report Parsing**: Parse unstructured data into a structured format.
 - **Configurable Output**: Output can be customized based on report format.
 
 ---
@@ -25,7 +26,15 @@ To set up this project locally, follow the steps in the [setup.md](setup.md).
 
 ## Usage
 
-Once the environment is set up, you can run the main script to extract and process blood report data. Ensure that the `nltk_data` is properly configured as described in the setup instructions.
+Once the environment is set up, you can run the FastAPI application locally using:
+
+```bash
+python run.py
+```
+
+Access the application at `http://127.0.0.1:8000` and use the provided endpoints for formatting markdown inputs.
+
+>Uncomment the development serve line in `run.py`.  `uvicorn.run("server.api:app", reload=True)`
 
 ---
 
@@ -34,28 +43,34 @@ Once the environment is set up, you can run the main script to extract and proce
 ```bash
 blood-report-extraction/
 │
-├── .venv 
-├── datasets/                       # Datasets
-│   └── phrase_datasets/            # Phrase Datasets
-│       └── phrase_datasets.csv
-│       └── augmentated_phrase_dataset.csv
-│       └── medical_synonym.json
-├── models/
-├── phrase_detection_module         # Phrase detection module
-│   └── phrase_data_augmentation.py
-│   └── phrase_detection_module_local_script.py
-│   └── phrase_detection.py
+├── .venv
+├── server/                       # FastAPI application code
+│   ├── modules/
+│       ├── chunking.py
+│       ├── data_extractor.py
+│       ├── format_data.py
+│       ├── phrase_detection.py
+│       ├── unit_conversion.py
+│   ├── api.py                    # Entry point for the FastAPI app
+│   ├── routes.py
+│   ├── models.py
+│   └── ocrprocessor.py
+├── tests/                        # Unit tests
 ├── .gitignore
 ├── LICENSE
-├── README.md                       # Project description and setup instructions
-└── requirements.txt
+├── README.md                     # Project description and setup instructions
+├── requirements.txt              # Required Python packages
+├── setup.md                      # Setup instructions
+└── vercel.json
 ```
 
->The above directory structure, and the modules are subject to change.
+>The above directory structure and modules are subject to change.
 
 ---
 
 ## Testing
+
+>:warning: The `tests/` is currently dumped for multiple reasons.
 
 Unit tests are located in the `tests` folder. To run the tests, use:
 
@@ -70,24 +85,24 @@ pytest tests/
 ### File and Folder Naming
 
 - Use **snake_case** for all **files** and **folders**.
-  - Example: `data_processing.py`, `phrase_detection_module`
+  - Example: `data_processing.py`, `utils`
 - Name **data** and **datasets** in the **singular form**.
-  - Example: `dataset.csv`, `synonym.json`
+  - Example: `dataset.csv`, `config.json`
 
 ### Git Commit Guidelines
 
 - Keep commits **simple and short**, describing the change.
-  - Example: `Fix bug in data extraction`
+  - Example: `Fix bug in data formatting`
 - **Commit frequently** at small increments.
-  - Example: `Add data preprocessing`, `Fix typo in README`
+  - Example: `Add API endpoint for formatting`, `Update README`
 - For **multiple changes**, separate messages with commas.
-  - Example: `Fix data loading, update training script, improve logging`
+  - Example: `Fix API bug, update tests, improve error handling`
 
 ### Pull Request Guidelines
 
 - Always create a **pull request** for merging changes to the `main` or *any* branch.
 - Use clear and concise PR titles and descriptions.
-  - Example: `Add data preprocessing step to pipeline`
+  - Example: `Add table formatting functionality`
 
 ---
 

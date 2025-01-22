@@ -1,4 +1,4 @@
-# Setup Instructions for Blood Report Extraction App for development and testing purposes
+# Setup Instructions for Blood Report Extraction App for Development and Testing Purposes
 
 ## Prerequisites
 
@@ -28,42 +28,33 @@ Install the required packages using pip:
 pip install -r requirements.txt
 ```
 
-### 3. Download NLTK Data
+### 3. Set Up Environment Variables
 
-Ensure that the necessary NLTK data is downloaded and stored in the virtual environment. Run the following Python script:
+Create a `.env` file in the project root and add your Gemini API key:
 
-```python
-import nltk
-
-# Set the path to the virtual environment's nltk_data folder
-
-nltk.download('wordnet', download_dir='.venv/nltk_data')
-nltk.download('omw-1.4', download_dir='.venv/nltk_data')
-
-# Set NLTK to only use the virtual environment's nltk_data folder
-
-nltk.data.path = ['.venv\\nltk_data']
-
-# Verify the directories NLTK will check
-
-print(nltk.data.path)
+```env
+GEMINI_API_KEY=your_api_key_here
 ```
 
-### 4. Verify NLTK Data Path
+Ensure the `.env` file is not shared publicly or committed to version control.
 
-Run the script above to ensure that NLTK is using the correct directory for its data files. You should see `.venv\\nltk_data` in the printed list.
+### 4. Run the Application
 
-### 5. Run the Application
-
-After setting up the environment and downloading the necessary NLTK data, you can run the main script to start processing blood reports:
+After setting up the environment and installing the dependencies, you can run the FastAPI application locally:
 
 ```bash
-python blood_report_extraction.py
+python run.py
 ```
+
+The application will be accessible at `http://127.0.0.1:8000`.
+
+>Uncomment the development serve line in `run.py`.  `uvicorn.run("server.api:app", reload=True)`
 
 ---
 
 #### Testing
+
+>:warning: The `tests/` is currently dumped for multiple reasons.
 
 Unit tests are available in the `tests/` directory. To run the tests, use:
 
@@ -73,8 +64,8 @@ pytest tests/
 
 #### Troubleshooting
 
-If NLTK is unable to find the data, ensure that the environment variable NLTK_DATA is set to `.venv/nltk_data`.
-Ensure all required dependencies are installed by checking `requirements.txt`.
+- Ensure all required dependencies are installed by checking `requirements.txt`.
+- If the API key is not working, verify it is correctly set in the `.env` file.
 
 For further assistance, please contact the project owner.
 
