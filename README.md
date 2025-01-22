@@ -4,7 +4,7 @@
 
 ## Overview
 
-This project automates the extraction and formatting of blood report data. It processes markdown inputs containing medical tables and ensures they are formatted correctly without altering numerical or textual data. The application uses FastAPI and requires a Gemini API key for formatting operations.
+This project automates the extraction and formatting of blood report data. It processes markdown inputs containing medical tables and extracts the data as required and sends the extracted data back. The application uses FastAPI and requires a Gemini API key for formatting operations.
 
 ---
 
@@ -44,24 +44,26 @@ Access the application at `http://127.0.0.1:8000` and use the provided endpoints
 blood-report-extraction/
 │
 ├── .venv
+├── data/                         # Contains data for processing the report
 ├── server/                       # FastAPI application code
-│   ├── modules/
-│       ├── chunking.py
-│       ├── data_extractor.py
-│       ├── format_data.py
-│       ├── phrase_detection.py
-│       ├── unit_conversion.py
-│   ├── api.py                    # Entry point for the FastAPI app
-│   ├── routes.py
-│   ├── models.py
-│   └── ocrprocessor.py
-├── tests/                        # Unit tests
-├── .gitignore
-├── LICENSE
+│   ├── modules/                  # Modules to process the report in various stages
+│   │   ├── chunking.py
+│   │   ├── data_extractor.py
+│   │   ├── format_data.py
+│   │   ├── phrase_detection.py
+│   │   └── unit_conversion.py
+│   ├── api.py                    # FastAPI app flie
+│   ├── routes.py                 # Routes for FastAPI
+│   ├── models.py                 # Models for FastAPI
+│   └── ocrprocessor.py           # OCRProcessor for processing the report (build using the programs in `modules/`)
+├── run.py                        # Entry point for the FastAPI app
+├── tests/                        # Unit tests (> dumped)
+├── .gitignore                    # GitIgnore files and directories
+├── LICENSE                       # License
 ├── README.md                     # Project description and setup instructions
 ├── requirements.txt              # Required Python packages
 ├── setup.md                      # Setup instructions
-└── vercel.json
+└── vercel.json                   # Vercel deployment configuration
 ```
 
 >The above directory structure and modules are subject to change.
