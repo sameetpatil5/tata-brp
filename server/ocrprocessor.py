@@ -1,10 +1,10 @@
-from modules.unit_conversion import unit_conversion
-from modules.phrase_detection import detect_phrases
-from modules.data_extractor import extract_phrases, extract_data
-from modules.chunking import batch_chunks, parse_chunks, bundle_chunks
+from .modules.unit_conversion import unit_conversion
+from .modules.phrase_detection import detect_phrases
+from .modules.data_extractor import extract_phrases, extract_data
+from .modules.chunking import batch_chunks, parse_chunks, bundle_chunks
 
 class OCRProcessor:
-    def __init__(self, ocr_markdown):
+    def __init__(self, ocr_markdown=None):
         """
         Initializes the OCRProcessor with the OCR markdown input.
 
@@ -13,6 +13,15 @@ class OCRProcessor:
         """
         self.ocr_markdown = ocr_markdown
         self.data_packet = None
+
+    def set_markdown(self, ocr_markdown):
+        """
+        Sets the OCR markdown input for the OCRProcessor.
+
+        Args:
+            ocr_markdown (str): Raw OCR output in markdown format.
+        """
+        self.ocr_markdown = ocr_markdown
 
     def process_chunks(self):
         """

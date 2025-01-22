@@ -1,12 +1,15 @@
-from ocrprocessor import OCRProcessor
+# api.py
+from fastapi import FastAPI
+from .routes import router as OCRRouter
 
-with open("data/test_ocr.md") as f:
-    ocr_markdown = f.read()
+# Initialize FastAPI app
+app = FastAPI()
 
-ocr = OCRProcessor(ocr_markdown)
+# Include the router from routes.py
+app.include_router(OCRRouter, prefix="/ocr")
 
-# print(ocr.ocr_markdown)
-# ocr.process_chunks()
-
-# print(ocr.detect_phrases(ocr.process_chunks()))
-ocr.convert_units(ocr.detect_phrases(ocr.process_chunks()))
+@app.get("/", tags=["Root"])
+async def read_root():
+    return {
+        "message": "Welcome to the TATA Project OCR API!"
+    }
