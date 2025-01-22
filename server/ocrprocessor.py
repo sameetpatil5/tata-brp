@@ -2,6 +2,7 @@ from .modules.unit_conversion import unit_conversion
 from .modules.phrase_detection import detect_phrases
 from .modules.data_extractor import extract_phrases, extract_data
 from .modules.chunking import batch_chunks, parse_chunks, bundle_chunks
+from .modules.format_data import format_markdown
 
 class OCRProcessor:
     def __init__(self, ocr_markdown=None):
@@ -22,6 +23,15 @@ class OCRProcessor:
             ocr_markdown (str): Raw OCR output in markdown format.
         """
         self.ocr_markdown = ocr_markdown
+
+    def format_markdown(self, ocr_markdown):
+        """
+        Formats the OCR markdown input for the OCRProcessor.
+
+        Args:
+            ocr_markdown (str): Raw OCR output in markdown format.
+        """
+        self.ocr_markdown = format_markdown(ocr_markdown)
 
     def process_chunks(self):
         """
@@ -78,6 +88,13 @@ class OCRProcessor:
         Returns:
             pd.DataFrame: Final processed data with standardized units.
         """
+
+        if not self.ocr_markdown:
+            raise ValueError("OCR markdown is not set. Please provide the OCR data.")
+
+        # Format the OCR markdown.
+        self.format_markdown(self.ocr_markdown)
+
         # Process the OCR markdown into structured chunks.
         processed_chunks = self.process_chunks()
 

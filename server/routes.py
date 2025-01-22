@@ -1,11 +1,7 @@
 # routes.py
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from .models import OCRInput
 from .ocrprocessor import OCRProcessor
-
-# Define a Pydantic model for the input data
-class OCRInput(BaseModel):
-    markdown: str
 
 # Create a router for OCR processing
 router = APIRouter()
