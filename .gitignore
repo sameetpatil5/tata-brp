@@ -173,3 +173,5 @@ cython_debug/
 # VS Code
 .vscode
 .prettierrc
+
+/tests
