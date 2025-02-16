@@ -34,8 +34,10 @@ def format_markdown(input_markdown: str) -> str:
     - The final output adheres to the standard format of medical blood reports.  
 
     Input markdown:  
+    ```
     {input_markdown}  
-
+    ```
+    
     Provide the formatted markdown output below:
     """
 
