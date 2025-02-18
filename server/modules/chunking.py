@@ -1,77 +1,96 @@
 import pandas as pd
-import re
+from pprint import pformat
+import logging
 
-def batch_chunks(markdown_content: str) -> list:
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+def batch_chunks(markdown_content: str) -> list[str]:
     """
-    Identify and extract tables from markdown content.
+    Identify and extract entire markdown tables from content.
 
     Args:
-        markdown_content (str): The markdown content containing tables and text.
+        markdown_content (str): The markdown content containing tables.
 
     Returns:
-        list: A list of markdown table strings.
+        list[str]: A list of markdown table strings.
     """
-    table_chunks = []
-    table_pattern = re.compile(r"\|.*?\|\n(?:\|.*?\|\n)*")  # Regex to match markdown tables.
+    try:
+        logger.info("Batching chunks from markdown content")
+        table_chunks = []
+        lines = markdown_content.strip().split("\n")
+        
+        current_table = []
+        recording = False
 
-    for match in table_pattern.finditer(markdown_content):
-        table = match.group().strip()  # Extract the table content.
-        table_chunks.append(table)
+        for line in lines:
+            if "|" in line:  # Start recording when a '|' is found
+                recording = True
+                current_table.append(line)
+            elif recording:  # Stop when there's no '|'
+                table_chunks.append("\n".join(current_table))
+                current_table = []
+                recording = False
 
-    return table_chunks
+        # Append the last table if still recording
+        if current_table:
+            table_chunks.append("\n".join(current_table))
+        logger.info(f"Successfully batched {len(table_chunks)} chunks from markdown content")
+        return table_chunks
+
+    except Exception as e:
+        logger.error(f"Error while batching chunks from markdown content: {e}")
 
 def parse_chunks(table_content: str) -> pd.DataFrame:
     """
-    Parse a markdown table into a Pandas DataFrame.
-
+    Parse a markdown table into a Pandas DataFrame, where each row contains:
+    - test
+    - result
+    - unit
+    - reference_range.
+    
     Args:
         table_content (str): The markdown table content.
 
     Returns:
-        pd.DataFrame: A DataFrame with columns 'Test', 'Result', and 'Unit'.
+        pd.DataFrame: A DataFrame with columns 'test', 'result', 'unit', and 'reference_range'.
     """
-    lines = table_content.strip().split("\n")
+    try:
+        logger.info("Parsing chunks")
+        lines = table_content.strip().split("\n")
+        start_index = 2
+        data = []
 
-    # Determine where the data starts by checking for header separator lines.
-    if len(lines) > 1 and ("|-" in lines[1] or "| -" in lines[1]):
-        start_index = 2  # Skip header and separator.
-    elif len(lines) > 0 and ("|-" in lines[0] or "| -" in lines[0]):
-        start_index = 1  # Skip separator line only.
-    else:
-        start_index = 0  # No header separator, include all lines.
+        for line in lines[start_index:]:
+            cols = [col.strip() for col in line.split("|")[1:-1]]
 
-    headers = [col.strip() for col in lines[0].split("|")[1:-1]]  # Extract column headers.
+            test, result, unit, reference_range = cols
+            # test, result, unit, reference_range = cols if len(cols) == 4 else cols + ["-"] # Backup debug
 
-    data = []
-    for line in lines[start_index:]:
-        cols = [col.strip() for col in line.split("|")[1:-1]]
+            # Replace "-" entries with None (NULL equivalent in pandas).
+            result = None if result == "-" else result
+            unit = None if unit == "-" else unit
+            reference_range = None if reference_range == "-" else reference_range
 
-        if len(cols) == 4:  # Handle properly formatted tables.
-            test, result, unit, _ = cols
-        elif len(cols) == 3:  # Handle merged columns.
-            test, result_unit, _ = cols
+            data.append({"test": test, "result": result, "unit": unit, "reference_range": reference_range})
 
-            # Use regex to separate numeric result and unit.
-            match = re.match(r"([\d.]+)\s+(\S.*)", result_unit)
-            if match:
-                result = match.group(1)  # Extract numeric result.
-                unit = match.group(2)    # Extract unit.
-            else:
-                result = result_unit
-                unit = _ or None
+            logger.info(f"Parsed row form chunk: {pformat(data[-1])}")
+
+        # Create a DataFrame from the parsed data.
+        df = pd.DataFrame(data)
+
+        # Return None for empty or irrelevant tables.
+        if df.empty or df.isnull().all(axis=None):
+            logger.warning("Chunk is empty or irrelevant")
+            return None
         else:
-            continue  # Skip rows with unexpected formatting.
-
-        data.append({"Test": test, "Result": result, "Unit": unit})
-
-    # Create a DataFrame from the extracted data.
-    df = pd.DataFrame(data)
-
-    # Return None for empty or irrelevant tables.
-    if df.empty or df.isnull().all(axis=None):
-        return None
-
-    return df
+            logger.info("Successfully parsed chunk")
+            return df
+    except Exception as e:
+        logger.error(f"Error while parsing chunks: {e}")
 
 def bundle_chunks(chunk_dataframes: list[pd.DataFrame]) -> pd.DataFrame:
     """
@@ -83,8 +102,23 @@ def bundle_chunks(chunk_dataframes: list[pd.DataFrame]) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A single DataFrame containing all the merged data.
     """
-    if not chunk_dataframes:
-        return pd.DataFrame()  # Return an empty DataFrame if the list is empty.
+    try:
+        logger.info("Bundling chunks")
+        if not chunk_dataframes:
+            logger.warning("Chunk dataframes is empty")
+            return pd.DataFrame()
 
-    merged_chunk = pd.concat(chunk_dataframes, ignore_index=True)  # Merge all DataFrames.
-    return merged_chunk
+        # Remove any `None` entries from the list.
+        chunk_dataframes = [df for df in chunk_dataframes if df is not None]
+
+        if not chunk_dataframes:
+            logger.warning("Chunk dataframes is empty")
+            return pd.DataFrame()
+
+        merged_chunk = pd.concat(chunk_dataframes, ignore_index=True)  # Merge all DataFrames.
+
+        logger.info("Successfully bundled chunks")
+        return merged_chunk
+
+    except Exception as e:
+        logger.error(f"Error while bundling chunks: {e}")
