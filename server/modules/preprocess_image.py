@@ -89,7 +89,7 @@ def reorder_corner_points(points: np.ndarray) -> np.ndarray:
         logger.error(f"Error in reorder_corner_points: {e}")
     return points
 
-def findBiggestContour(contours: list) -> np.ndarray | int:
+def find_biggest_contour(contours: list) -> tuple[np.ndarray, int]:
     """
     Finds the biggest 4-point contour from a list of contours.
 
@@ -118,7 +118,7 @@ def findBiggestContour(contours: list) -> np.ndarray | int:
             logger.info(f"Found biggest contour with area: {max_area}")
         return biggest_contour, max_area
     except Exception as e:
-        logger.error(f"Error in findBiggestContour: {e}")
+        logger.error(f"Error in find_biggest_contour: {e}")
     return np.array([]), 0
 
 def deskew_image(image: np.ndarray, height: float, width: float) -> np.ndarray:
@@ -144,7 +144,7 @@ def deskew_image(image: np.ndarray, height: float, width: float) -> np.ndarray:
         image_erode = cv.erode(image_dial, np.ones((5, 5)), iterations=1)
 
         contours, _ = cv.findContours(image_erode, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        biggest_contour, max_area = findBiggestContour(contours)
+        biggest_contour, max_area = find_biggest_contour(contours)
 
         logger.info(f"Contour Detected, Area of biggest contour: {max_area}")
 
