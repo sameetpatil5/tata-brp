@@ -3,6 +3,13 @@ import numpy as np
 import requests
 from io import BytesIO
 from PIL import Image
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 def load_image(image_path: str) -> np.ndarray:
     """
@@ -15,25 +22,42 @@ def load_image(image_path: str) -> np.ndarray:
         np.ndarray: The loaded image in OpenCV BGR format.
     """
 
-    if "http" not in image_path:
-        return cv.imread(image_path)
+    try:
+        if "http" not in image_path:
+            image_cv = cv.imread(image_path)
+            if image_cv is None:
+                logger.error(f"Failed to load image from local path: {image_path}")
+            else:
+                logger.info(f"Loaded image from local file path: {image_path}")
+            return image_cv
+        
+        response = requests.get(image_path)
+        response.raise_for_status()
+        logger.info(f"Fetched image from URL: {image_path}")
 
-    response = requests.get(image_path) # Fetch image
-    image_pil = Image.open(BytesIO(response.content))  # Open with PIL
-    image_array = np.array(image_pil) # Convert to OpenCV format
-    image_cv = cv.cvtColor(image_array, cv.COLOR_RGB2BGR) # Convert RGB to BGR
+        image_pil = Image.open(BytesIO(response.content))
+        image_array = np.array(image_pil)
+        image_cv = cv.cvtColor(image_array, cv.COLOR_RGB2BGR)
+        return image_cv
+    except requests.RequestException as e:
+        logger.error(f"Error fetching image from URL {image_path}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error in load_image: {e}")
+    return None
 
-    return image_cv
-
-def save_image(processed_image: np.ndarray, output_path: str):
+def save_image(processed_image: np.ndarray, output_path: str) -> None:
     """
     Saves the processed image to a given path.
     """
-    if processed_image is not None:
-        cv.imwrite(output_path, processed_image)
-        # Logic to store image to google clould
-    else:
-        print("No processed image to save.")
+    try:
+        if processed_image is not None:
+            cv.imwrite(output_path, processed_image)
+            # Logic to save the processed image on Cloud
+            logger.info(f"Image saved successfully at: {output_path}")
+        else:
+            logger.warning("No processed image to save.")
+    except Exception as e:
+        logger.error(f"Failed to save image at {output_path}: {e}")
 
 def reorder_corner_points(points: np.ndarray) -> np.ndarray:
     """
@@ -46,23 +70,26 @@ def reorder_corner_points(points: np.ndarray) -> np.ndarray:
     Returns:
         numpy.ndarray: Reordered points.
     """
-    if points is None or points.shape != (4, 1, 2):
-        raise ValueError("Error: Expected input shape (4, 1, 2) for reorder.")
+    try:
+        if points is None or points.shape != (4, 1, 2):
+            logger.error("Invalid shape for points input, expected (4,1,2)")
+            raise ValueError("Error: Expected input shape (4, 1, 2) for reorder.")
 
-    points = points.reshape((4, 2))  # Convert to 4x2 shape
-    reordered = np.zeros((4, 1, 2), dtype=np.int32)
+        points = points.reshape((4, 2))
+        reordered = np.zeros((4, 1, 2), dtype=np.int32)
+        add = points.sum(axis=1)
+        diff = np.diff(points, axis=1)
+        reordered[0] = points[np.argmin(add)]
+        reordered[3] = points[np.argmax(add)]
+        reordered[1] = points[np.argmin(diff)]
+        reordered[2] = points[np.argmax(diff)]
+        logger.info("Corner points reordered successfully.")
+        return reordered
+    except Exception as e:
+        logger.error(f"Error in reorder_corner_points: {e}")
+    return points
 
-    add = points.sum(axis=1)  # Sum of (x + y) coordinates
-    diff = np.diff(points, axis=1)  # Difference (x - y)
-
-    reordered[0] = points[np.argmin(add)]  # Top-left (smallest sum)
-    reordered[3] = points[np.argmax(add)]  # Bottom-right (largest sum)
-    reordered[1] = points[np.argmin(diff)]  # Top-right (smallest difference)
-    reordered[2] = points[np.argmax(diff)]  # Bottom-left (largest difference)
-
-    return reordered
-
-def findBiggestContour(contours):
+def findBiggestContour(contours: list) -> np.ndarray | int:
     """
     Finds the biggest 4-point contour from a list of contours.
 
@@ -72,124 +99,73 @@ def findBiggestContour(contours):
     Returns:
         tuple: (Biggest contour as a numpy array, its area).
     """
-    biggest = np.array([])
-    max_area = 0
+    try:
+        biggest_contour = np.array([])
+        max_area = 0
+        min_area = 5000
 
-    for contour in contours:
-        area = cv.contourArea(contour)
-        if area > 5000:  # Ignore small noise
-            peri = cv.arcLength(contour, True)
-            approx = cv.approxPolyDP(contour, 0.02 * peri, True)
+        for contour in contours:
+            area = cv.contourArea(contour)
+            if area > min_area:
+                peri = cv.arcLength(contour, True)
+                approx = cv.approxPolyDP(contour, 0.02 * peri, True)
+                if len(approx) == 4 and area > max_area:
+                    biggest_contour = approx
+                    max_area = area
+        if biggest_contour.size == 0:
+            logger.warning("No suitable contour found.")
+        else:
+            logger.info(f"Found biggest contour with area: {max_area}")
+        return biggest_contour, max_area
+    except Exception as e:
+        logger.error(f"Error in findBiggestContour: {e}")
+    return np.array([]), 0
 
-            if len(approx) == 4 and area > max_area:  # Ensure it's a quadrilateral
-                biggest = approx
-                max_area = area
-
-    return biggest, max_area
-
-def noise_removal(image):
-    """
-    Removes small noise from the image using morphological operations.
-    
-    Args:
-        image (numpy.ndarray): Input binary/grayscale image.
-    
-    Returns:
-        numpy.ndarray: Denoised image.
-    """
-    if len(image.shape) == 3:
-        image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)  # Convert to grayscale if needed
-
-    kernel = np.ones((1, 1), np.uint8)
-
-    # Morphological operations to remove small noise
-    image = cv.dilate(image, kernel, iterations=2)  # Expands white regions
-    image = cv.erode(image, kernel, iterations=2)   # Shrinks white regions back to original size
-    image = cv.morphologyEx(image, cv.MORPH_CLOSE, kernel)  # Fills small holes
-
-    # Apply median blur for smoother noise removal
-    image = cv.medianBlur(image, 3)
-
-    return image
-
-def thick_font(image):
-    """
-    Makes text thicker in a binary image to improve OCR readability.
-    
-    Args:
-        image (numpy.ndarray): Input binary image (black text on white background).
-    
-    Returns:
-        numpy.ndarray: Image with thickened font.
-    """
-    if len(image.shape) == 3:
-        image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)  # Convert to grayscale if needed
-
-    # Ensure the image is binary
-    _, image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-
-    # Invert the image (to make text white and background black)
-    image = cv.bitwise_not(image)
-
-    # Apply dilation to thicken the text
-    kernel = np.ones((2, 2), np.uint8)
-    image = cv.dilate(image, kernel, iterations=1)
-
-    # Invert back to original format
-    image = cv.bitwise_not(image)
-
-    return image
-
-def deskew_image(image, height, width):
+def deskew_image(image: np.ndarray, height: float, width: float) -> np.ndarray:
     """
     Deskews an image to improve OCR accuracy.
     
     Args:
         image (numpy.ndarray): Input image.
+        height (float): Height of the image.
+        width (float): Width of the image.
     
     Returns:
         numpy.ndarray: Deskewed image.
     """
+    try:
+        # Define the A4 expected area range (for 300 DPI)
+        A4_MAX_AREA = 8_700_000  # Upper limit 
+        A4_MIN_AREA = 4_000_000  # Lower limit 
 
-    # Apply Gaussian blur
-    imageBlur = cv.GaussianBlur(image, (5, 5), 1)
-    # Apply Canny edge detection
-    imageCanny = cv.Canny(imageBlur, 100, 100)
-    # Image Dilation
-    imageDial = cv.dilate(imageCanny, np.ones((5, 5)), iterations=2)
-    # Image Erosion
-    imageErode = cv.erode(imageDial, np.ones((5, 5)), iterations=1)
+        image_blur = cv.GaussianBlur(image, (5, 5), 1)
+        image_canny = cv.Canny(image_blur, 100, 100)
+        image_dial = cv.dilate(image_canny, np.ones((5, 5)), iterations=2)
+        image_erode = cv.erode(image_dial, np.ones((5, 5)), iterations=1)
 
-    # Find contours
-    contours, _ = cv.findContours(imageErode, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv.findContours(image_erode, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        biggest_contour, max_area = findBiggestContour(contours)
 
-    # Find the biggest contour
-    imageContours = image.copy()
-    biggestContour, maxArea = findBiggestContour(contours)
+        logger.info(f"Contour Detected, Area of biggest contour: {max_area}")
 
-    print(f"Detected Contour Area: {maxArea}")
+        if biggest_contour.size != 0 and A4_MIN_AREA <= max_area <= A4_MAX_AREA:
+            logger.info("Deskewing image using biggest contour.")
+            # Reorder the biggest contour
+            contourReordered = reorder_corner_points(biggest_contour)
+            # Perspective transformation/ Deskew Image
+            pts1 = np.float32(contourReordered)
+            pts2 = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
+            matrix = cv.getPerspectiveTransform(pts1, pts2)
+            image_warped = cv.warpPerspective(image, matrix, (width, height))
+            logger.info("Image deskewed successfully.")
+            return image_warped
+        else:
+            logger.warning("Skipping deskewing as no valid contour found.")
+    except Exception as e:
+        logger.error(f"Error in deskew_image: {e}")
+    return image
 
-    # Define the A4 expected area range (for 300 DPI)
-    A4_MAX_AREA = 8_700_000  # Upper limit for A4 paper
-    A4_MIN_AREA = 4_000_000  # Lower limit to filter noise/small objects
-
-    if biggestContour.size != 0 and A4_MIN_AREA <= maxArea <= A4_MAX_AREA:
-
-        # Reorder the biggest contour
-        contourReordered = reorder_corner_points(biggestContour)
-        cv.drawContours(imageContours, contourReordered, -1, (0, 255, 0), 20)
-        
-        # Perspective transformation/ Deskew Image
-        pts1 = np.float32(contourReordered)
-        pts2 = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
-        matrix = cv.getPerspectiveTransform(pts1, pts2)
-        imageWarpped = cv.warpPerspective(image, matrix, (width, height))
-
-        return imageWarpped
-    else:
-        return image
-
-def increase_contrast(image):
+def increase_contrast(image: np.ndarray) -> np.ndarray:
     """
     Increases contrast in an image.
     
@@ -199,18 +175,21 @@ def increase_contrast(image):
     Returns:
         numpy.ndarray: Image with increased contrast.
     """
-    # Apply adaptive threshold
-    imageAdaptiveThreshold = cv.adaptiveThreshold(image, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 5)
-    imageAdaptiveThreshold = cv.bitwise_not(imageAdaptiveThreshold)
-    imageAdaptiveThreshold = cv.medianBlur(imageAdaptiveThreshold, 3)
-    imageAdaptiveThreshold = cv.bitwise_not(imageAdaptiveThreshold)
+    try:
+        # Apply adaptive threshold
+        image_adaptive_threshold = cv.adaptiveThreshold(image, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 5)
+        image_adaptive_threshold = cv.bitwise_not(image_adaptive_threshold)
+        image_adaptive_threshold = cv.medianBlur(image_adaptive_threshold, 3)
+        image_adaptive_threshold = cv.bitwise_not(image_adaptive_threshold)
 
-    # Add filter
-    imageFiltered = cv.bilateralFilter(imageAdaptiveThreshold, d=9, sigmaColor=75, sigmaSpace=75)
+        # Add filter
+        image_filtered = cv.bilateralFilter(image_adaptive_threshold, d=9, sigmaColor=75, sigmaSpace=75)
+        return image_filtered
+    except Exception as e:
+        logger.error(f"Error while increasing contrast: {e}")
+    return image
 
-    return imageFiltered
-
-def denoise_image(image):
+def denoise_image(image: np.ndarray) -> np.ndarray:
     """
     Denoises an image.
     
@@ -220,40 +199,47 @@ def denoise_image(image):
     Returns:
         numpy.ndarray: Denoised image.
     """
-    # Remove Noise
-    kernel = np.ones((1, 1), np.uint8)
+    try:
+        kernel = np.ones((1, 1), np.uint8)
 
-    # Morphological operations to remove small noise
-    imageNoiseOut = cv.dilate(image, kernel, iterations=2)  # Expands white regions
-    imageNoiseOut = cv.erode(image, kernel, iterations=2)   # Shrinks white regions back to original size
-    imageNoiseOut = cv.morphologyEx(image, cv.MORPH_CLOSE, kernel)  # Fills small holes
+        image_denoised = cv.dilate(image, kernel, iterations=2)  
+        image_denoised = cv.erode(image_denoised, kernel, iterations=2)   
+        image_denoised = cv.morphologyEx(image_denoised, cv.MORPH_CLOSE, kernel)
+        image_denoised = cv.medianBlur(image_denoised, 3)
 
-    # Apply median blur for smoother noise removal
-    imageNoiseOut = cv.medianBlur(image, 3)
+        # Apply Otsu Threshold
+        _, image_otsu_threshold = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        
+        return image_otsu_threshold
+    except Exception as e:
+        logger.error(f"Error while Denoising Image: {e}")
+    return image
 
-    # Apply Otsu Threshold
-    _, ImageOtsuThreshold = cv.threshold(imageNoiseOut, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-    
-    return ImageOtsuThreshold
-
-def adjust_borders(image, height, width, borderSize):
+def adjust_borders(image: np.ndarray, height: float, width: float, border_size: int) -> np.ndarray:
     """
     Adjusts the borders of an image to improve OCR accuracy.
     
     Args:
         image (numpy.ndarray): Input image.
+        height (float): Height of the image.
+        width (float): Width of the image.
+        border_size (int): Size of the border to adjust.
     
     Returns:
         numpy.ndarray: Image with adjusted borders.
     """
-    # Adjust Borders and resize
-    imageBorderAdjust = image[borderSize:image.shape[0]-borderSize, borderSize:image.shape[1]-borderSize]
-    imageBorderAdjust = cv.resize(imageBorderAdjust, (width, height))
-    imageBorderAdjust = cv.copyMakeBorder(imageBorderAdjust, borderSize, borderSize, borderSize, borderSize, cv.BORDER_CONSTANT, value=(255, 255, 255))
-    imageBorderAdjust = cv.resize(imageBorderAdjust, (width, height))
-    return imageBorderAdjust
+    try:
+        # Adjust Borders and resize
+        image_border_adjusted = image[border_size:image.shape[0]-border_size, border_size:image.shape[1]-border_size]
+        image_border_adjusted = cv.resize(image_border_adjusted, (width, height))
+        image_border_adjusted = cv.copyMakeBorder(image_border_adjusted, border_size, border_size, border_size, border_size, cv.BORDER_CONSTANT, value=(255, 255, 255))
+        image_border_adjusted = cv.resize(image_border_adjusted, (width, height))
+        return image_border_adjusted
+    except Exception as e:
+        logger.error(f"Error while Adjusting Borders: {e}")
+    return image
 
-def emphasize_text(image):
+def emphasize_text(image: np.ndarray) -> np.ndarray:
     """
     Makes text more visible in an image.
     
@@ -263,19 +249,16 @@ def emphasize_text(image):
     Returns:
         numpy.ndarray: Image with emphasized text.
     """
-    # Ensure the image is binary
-    _, image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    try:
+        kernel = np.ones((2, 2), np.uint8)
 
-    # Invert the image (to make text white and background black)
-    image = cv.bitwise_not(image)
-
-    # Apply dilation to thicken the text
-    kernel = np.ones((2, 2), np.uint8)
-    image = cv.dilate(image, kernel, iterations=1)
-
-    # Invert back to original format
-    image = cv.bitwise_not(image)
-
+        _, image_emphasized_text = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        image_emphasized_text = cv.bitwise_not(image_emphasized_text)
+        image_emphasized_text = cv.dilate(image, kernel, iterations=1)
+        image_emphasized_text = cv.bitwise_not(image_emphasized_text)
+        return image_emphasized_text
+    except Exception as e:
+        logger.error(f"Error while Emphasizing Text: {e}")
     return image
 
 
@@ -290,27 +273,30 @@ def preprocess_image(image: np.ndarray) -> np.ndarray:
         numpy.ndarray: Preprocessed image.
     """
     BORDER_SIZE = 20
+    try:
+        # Load Image
+        image = load_image(image_path)
+        # Get image dimensions
+        height, width, channels = image.shape
+        # Resize image
+        image_resized = cv.resize(image, (width, height))
+        # Convert to grayscale
+        image_grayed = cv.cvtColor(image_resized, cv.COLOR_BGR2GRAY)
+        # Deskew Image
+        image_deskewed = deskew_image(image_grayed, height, width)
+        # Increase contrast
+        image_contrasted = increase_contrast(image_deskewed)
+        # Denoise Image
+        image_denoise = denoise_image(image_contrasted)
+        # Adjust borders
+        image_bordered = adjust_borders(image_denoise, height, width, BORDER_SIZE)
+        # Emphasize text
+        image_emphasized = emphasize_text(image_bordered)
 
-    # Load Image
-    image = load_image(image_path)
-    # Get image dimensions
-    height, width, channels = image.shape
-    # Resize image
-    imageResized = cv.resize(image, (width, height))
-    # Convert to grayscale
-    imageGrayed = cv.cvtColor(imageResized, cv.COLOR_BGR2GRAY)
-    # Deskew Image
-    imageDeskewed = deskew_image(imageGrayed, height, width)
-    # Increase contrast
-    imageContrasted = increase_contrast(imageDeskewed)
-    # Denoise Image
-    imageDenoise = denoise_image(imageContrasted)
-    # Adjust borders
-    imageBordered = adjust_borders(imageDenoise, height, width, BORDER_SIZE)
-    # Emphasize text
-    imageEmphasized = emphasize_text(imageBordered)
-
-    return imageEmphasized
+        return image_emphasized
+    except Exception as e:
+        logger.error(f"Error in preprocess_image: {e}")
+    return image
 
 if __name__ == "__main__":
     image_path = "E:/SAM ENGINEERINGs/TATA BRP/tests/image.jpg"
