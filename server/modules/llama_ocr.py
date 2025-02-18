@@ -1,8 +1,15 @@
 from together import Together
 import base64
 import os
+import logging
 
-def ocr_to_md(self, image_path: str, api_key: str = None, model: str = "Llama-3.2-90B-Vision") -> str:
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90B-Vision") -> str:
     """
     Convert an image into Markdown format using Together AI's vision model.
 
@@ -17,6 +24,7 @@ def ocr_to_md(self, image_path: str, api_key: str = None, model: str = "Llama-3.
 
     if api_key is None:
         api_key = os.getenv("TOGETHER_API_KEY")
+        logger.info("TOGETHER_API_KEY loaded from environment")
 
     vision_llm = (
         "meta-llama/Llama-Vision-Free"
@@ -24,50 +32,68 @@ def ocr_to_md(self, image_path: str, api_key: str = None, model: str = "Llama-3.
         else f"meta-llama/{model}-Instruct-Turbo"
     )
 
-    client = Together(api_key=api_key)
+    logger.info(f"Vision model {vision_llm} loaded ")
 
-    # Prepare image for API request
-    final_image_url = image_path if self.is_remote_file(image_path) else self.encode_image(image_path)
+    try:
 
-    system_prompt = """Convert the provided image into Markdown format. 
-    Ensure that all content from the page is included, such as headers, footers, subtexts, images (with alt text if possible), tables, and any other elements.
+        client = Together(api_key=api_key)
 
-    Requirements:
-    - Output Only Markdown: Return solely the Markdown content without any additional explanations or comments.
-    - No Delimiters: Do not use code fences or delimiters like ```markdown.
-    - Complete Content: Do not omit any part of the page, including headers, footers, and subtext.
-    """
+        # Prepare image for API request
+        final_image_url = image_path if is_remote_file(image_path) else encode_image(image_path)
+        logger.info(f"Packed image in a final URL: {final_image_url}")
 
-    response = client.chat.completions.create(
-        model=vision_llm,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": system_prompt},
-                    {"type": "image_url", "image_url": {"url": final_image_url}},
-                ],
-            }
-        ],
-    )
+        system_prompt = """Convert the provided image into Markdown format. 
+        Ensure that all content from the page is included, such as headers, footers, subtexts, images (with alt text if possible), tables, and any other elements.
 
-    return response.choices[0].message.content
+        Requirements:
+        - Output Only Markdown: Return solely the Markdown content without any additional explanations or comments.
+        - No Delimiters: Do not use code fences or delimiters like ```markdown.
+        - Complete Content: Do not omit any part of the page, including headers, footers, and subtext.
+        """
+
+        response = client.chat.completions.create(
+            model=vision_llm,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": system_prompt},
+                        {"type": "image_url", "image_url": {"url": final_image_url}},
+                    ],
+                }
+            ],
+        )
+
+        logger.info("Response successfully recieved from TogetherAI vision model")
+
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"Error while converting image to markdown: {e}")
 
 
-def encode_image(self, image_path: str) -> str:
+def encode_image(image_path: str) -> str:
     """Encodes an image to base64 format."""
-    with open(image_path, "rb") as image_file:
-        return f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
+    try:
+        logger.info("Encoding local file")
+        with open(image_path, "rb") as image_file:
+            encoded_image = f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
+            logger.info("Successfully encoded the image")
+            return encoded_image
+    except Exception as e:
+        logger.error(f"Error while encoding the image: {e}")
 
-
-def is_remote_file(sefl, image_path: str) -> bool:
+def is_remote_file(image_path: str) -> bool:
     """Checks if a file path is a remote URL."""
-    return image_path.startswith("http://") or image_path.startswith("https://")
-
+    try:
+        is_remote = image_path.startswith("http://") or image_path.startswith("https://")
+        logger.info("File is remote" if is_remote else "File is local")
+        return is_remote
+    except Exception as e:
+        logger.error(f"Error while checking if the file is remote: {e}")
 
 # Example usage:
 if __name__ == "__main__":
-
-    result = ocr_to_md("E:/SAM ENGINEERINGs/TATA BRP/tests/image.jpg")
+    image_path = "E:/SAM ENGINEERINGs/TATA BRP/tests/image.jpg"
+    result = image_to_md(image_path)
     print(result)
 
