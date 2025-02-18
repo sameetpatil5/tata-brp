@@ -1,102 +1,111 @@
 import pandas as pd
-import json
 import re
+from pprint import pformat
+import logging
 
-# Define regex patterns for common units
-UNIT_PATTERNS = {
-    "cmm": re.compile(r"/cmm"),
-    "gm/dl": re.compile(r"(gm/dl|g/dl)", re.IGNORECASE),
-    "109/L": re.compile(r"10/\^?9/L"),
-    "%": re.compile(r"%"),
-}
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
+)
+logger = logging.getLogger(__name__)
 
-# Conversion factors for matched units
-CONVERSION_FACTORS = {
-    "cmm": 1e-6,  # Conversion factor for cmm
-    "gm/dl": 1,   # Conversion factor for gm/dl (no change)
-    "109/L": 1,   # Conversion factor for 10^9/L (no change)
-    "%": 1        # Conversion factor for percentage (no change)
-}
-
-def standardize_unit(unit: str) -> str:
+def process_result(result: str) -> tuple[float, float]:
     """
-    Standardize a unit string using regex patterns.
+    Processes a result string of the form '4.5x10^3', '2x5^4', '10x30', etc.,
+    and returns the computed value.
 
     Args:
-        unit (str): The detected unit string.
+        result (str): The input string containing a multiplication expression.
 
     Returns:
-        str: Standardized unit or None if no match is found.
+        tuple[float, float]: A tuple containing the computed value and its multiplier.
     """
-    for standard_unit, pattern in UNIT_PATTERNS.items():
-        if pattern.search(unit):
-            return standard_unit
-    return None
+    try:
+        logger.debug(f"Processing result string: '{result}'", )
 
-def process_unit_conversion_with_regex(value: float, detected_unit: str, target_unit: str) -> float:
+        # If the input is a single number, return it directly
+        if re.fullmatch(r"[\d\.]+", result):  
+            value = float(result)
+            logger.info(f"Result is a single number: {value}")
+            return value, 1
+
+        match = re.match(r"([\d\.]+)\s*x\s*([\d\.]+)\^?(\d+)?", result)
+        if match:
+            base_num = float(match.group(1))  # First number before 'x'
+            multiplier = float(match.group(2)) if match.group(2) else 1  # Number after 'x'
+            exponent = int(match.group(3)) if match.group(3) else 1  # Exponent
+
+            result_value = base_num * pow(multiplier, exponent)
+            logger.info(f"Parsed result: base={base_num}, multiplier={multiplier}, exponent={exponent}, computed={result_value}")
+            return result_value
+        
+        logger.error(f"Invalid format for result: '{result}'")
+    except Exception as e:
+        logger.error(f"Error while processing result: {e}")
+
+def process_reference_range(reference_range: str, multiplier: float) -> tuple[float, float]:
     """
-    Convert a value from detected_unit to target_unit using regex.
+    Processes a reference range string of the form '3.5 - 6.0' and returns
+    the minimum and maximum values.
 
     Args:
-        value (float): The numerical value to convert.
-        detected_unit (str): Detected unit of the value.
-        target_unit (str): Target unit to convert to.
+        reference_range (str): The input string containing a range of values.
 
     Returns:
-        float: Converted value or None if conversion is not possible.
+        tuple[float, float]: A tuple containing the minimum and maximum values.
     """
-    # Standardize the detected unit
-    standardized_unit = standardize_unit(detected_unit)
-    if not standardized_unit:
-        return None  # Return None for unknown units
+    try:
+        logger.debug(f"Processing reference range string: '{reference_range}' with multiplier: {multiplier}")
 
-    # If units are the same, no conversion is needed
-    if standardized_unit == target_unit:
-        return value
-
-    # Apply conversion factor if defined
-    if standardized_unit in CONVERSION_FACTORS:
-        conversion_factor = CONVERSION_FACTORS[standardized_unit]
-        converted_value = value * conversion_factor
-        return converted_value
-
-    return None
+        match = re.match(r"([\d\.]+)\s*-\s*([\d\.]+)", reference_range)
+        if match:
+            min_value = float(match.group(1)) * multiplier
+            max_value = float(match.group(2)) * multiplier
+            logger.info(f"Parsed reference range: min={min_value}, max={max_value}")
+            return min_value, max_value
+        else:
+            logger.error(f"Invalid format for reference range: '{reference_range}'")
+    except Exception as e:
+        logger.error(f"Error while processing reference range: {e}")
 
 def unit_conversion(units_df: pd.DataFrame) -> dict:
     """
     Convert units in a DataFrame using regex patterns and target unit mappings.
 
     Args:
-        units_df (pd.DataFrame): DataFrame containing 'Test', 'Result', and 'Unit' columns.
+        units_df (pd.DataFrame): DataFrame containing 'test', 'result', 'unit', and 'reference_range' columns.
 
     Returns:
         dict: Dictionary mapping tests to their converted result values for the target unit.
     """
-    # Load target units from a JSON file
-    with open("data/unit_conversion_data/unit.json", "r") as unit_file:
-        target_units = json.load(unit_file)
+    try:
+        logger.info(f"Starting unit conversion for {len(units_df)} rows.")
 
-    # Normalize target unit keys to lowercase
-    target_units_normalized = {key.lower(): value for key, value in target_units.items()}
+        converted_results = []
 
-    # Initialize the final data packet
-    converted_results = {}
+        for index, row in units_df.iterrows():
+            try:
+                logger.debug(f"Processing row {index}: {pformat(row.to_dict())}")
 
-    # Iterate through each row in the DataFrame
-    for _, row in units_df.iterrows():
-        test_name_normalized = row["Test"].lower().strip()  # Normalize test name
-        target_unit = target_units_normalized.get(test_name_normalized)
+                base_num, multiplier = process_result(row["result"])
+                min_value, max_value = process_reference_range(row["reference_range"], multiplier) if row["reference_range"] else (None, None)
 
-        if not target_unit:
-            print(f"No target unit defined for {row['Test']}")
-            converted_results[row["Test"]] = None
-            continue
+                converted_entry = {
+                    row["test"]: {
+                        "result": base_num * multiplier,
+                        "unit": row["unit"],
+                        "reference-range": (min_value, max_value)
+                    },
+                }
 
-        # Perform unit conversion
-        converted_results[row["Test"]] = process_unit_conversion_with_regex(
-            float(row["Result"]),
-            row["Unit"].replace(" ", ""),
-            target_unit
-        )
+                logger.info(f"Converted row {index} successfully: {pformat(converted_entry)}")
+                converted_results.append(converted_entry)
 
-    return converted_results
+            except ValueError as e:
+                logger.error(f"Error processing row {index}: {e}")
+
+        logger.info("Unit conversion completed for all rows.")
+        return converted_results
+
+    except Exception as e:
+        logger.error(f"Error during unit conversion: {e}")
