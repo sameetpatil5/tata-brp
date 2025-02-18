@@ -4,10 +4,6 @@ from .processor import Processor
 import logging
 from typing import Optional
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 # Create a router for OCR processing
@@ -87,7 +83,8 @@ async def process(input_params: dict = Depends(validate_input)) -> dict:
             data = processor.process()
         elif file_path:
             # Process from image
-            logger.info(f"Processing file from path: {file_path.file_path}")
+            logger.info(f"Processing file...")
+            logger.debug(f"Processing file from path: {file_path.file_path}")
             processor.perform_ocr(file_path.file_path)
             data = processor.process()
 

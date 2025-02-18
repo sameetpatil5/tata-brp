@@ -2,10 +2,6 @@ from fuzzywuzzy import process
 import json
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 def detect_phrases(input_phrases: list[str]) -> dict:
@@ -29,7 +25,7 @@ def detect_phrases(input_phrases: list[str]) -> dict:
             common_terms = set(common_phrases_file.read().lower().split(","))
             valid_short_terms = set(valid_short_terms_file.read().lower().split(","))
     except Exception as e:
-        logger.error("Error loading classification data: %s", str(e))
+        logger.error(f"Error loading classification data: {e}")
         return {}
 
     logger.info("Successfully loaded classification data.")
@@ -43,33 +39,32 @@ def detect_phrases(input_phrases: list[str]) -> dict:
 
     classification_results = {}
 
-    logger.info("Processing %d input phrases...", len(input_phrases))
+    logger.info(f"Processing {len(input_phrases)} input phrases...")
 
-    for phrase in input_phrases:
+    for i, phrase in enumerate(input_phrases, 1):
         normalized_phrase = phrase.lower().strip()
 
         if not normalized_phrase:  # Skip empty phrases.
-            logger.debug("Skipping empty phrase.")
+            logger.info("Skipping empty phrase.")
             classification_results[phrase] = "Unknown"
             continue
 
-        logger.debug("Processing phrase: '%s'", phrase)
+        logger.info(f"Processing phrase {i}...")
+        logger.debug(f"Processing phrase: '{phrase}'")
 
         if normalized_phrase in common_terms:  # Check for common terms.
-            logger.info("Phrase '%s' is a common term. Classified as 'Unknown'.", phrase)
+            logger.debug(f"Phrase '{phrase}' is a common term. Classified as 'Unknown'.")
             classification_results[phrase] = "Unknown"
             continue
 
         if normalized_phrase in valid_short_terms:  # Check for valid short terms.
             classification_results[phrase] = phrase_to_key.get(normalized_phrase, "Unknown")
-            logger.info("Phrase '%s' matched as a valid short term. Classified as '%s'.",
-                        phrase, classification_results[phrase])
+            logger.debug(f"Phrase '{phrase}' matched as a valid short term. Classified as '{classification_results[phrase]}'.")
             continue
 
         if normalized_phrase in phrase_to_key:  # Exact match in dataset.
             classification_results[phrase] = phrase_to_key[normalized_phrase]
-            logger.info("Exact match found for '%s'. Classified as '%s'.",
-                        phrase, classification_results[phrase])
+            logger.debug(f"Exact match found for '{phrase}'. Classified as '{classification_results[phrase]}'.")
             continue
 
         # Use fuzzy matching for approximate matches.
@@ -77,12 +72,32 @@ def detect_phrases(input_phrases: list[str]) -> dict:
 
         if score > 90:  # Threshold for fuzzy matching.
             classification_results[phrase] = phrase_to_key[closest_match]
-            logger.info("Fuzzy match: '%s' -> '%s' (score: %d). Classified as '%s'.",
-                        phrase, closest_match, score, classification_results[phrase])
+            logger.debug(f"Fuzzy match: '{phrase}' -> '{closest_match}' (score: {score}). Classified as '{classification_results[phrase]}'.")
         else:
             classification_results[phrase] = "Unknown"
-            logger.info("No good match found for '%s' (best fuzzy score: %d). Classified as 'Unknown'.",
-                        phrase, score)
+            logger.debug(f"No good match found for '{phrase}' (best fuzzy score: {score}). Classified as 'Unknown'.")
 
     logger.info("Phrase classification completed.")
     return classification_results
+
+if __name__ == "__main__":
+    phrases = [
+    "Haemoglobin",
+    "R.B.C. Count",
+    "Total WBC Count",
+    "Platelets",
+    "Packed Cell Volume",
+    "Mean Corpuscular Volume",
+    "Mean Corpuscular Hemoglobin",
+    "Mean corpuscular Hb Con.",
+    "Neutrophils",
+    "Lymphocytes",
+    "Eosinophil",
+    "Monocytes",
+    "Basophils",
+    "Erythrocytes",
+    "Leukocytes"
+]
+    detected_phrases = detect_phrases(phrases)
+
+    print(detected_phrases)

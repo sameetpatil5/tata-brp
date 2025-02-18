@@ -1,10 +1,6 @@
 import pandas as pd
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 def extract_phrases(processed_chunks: pd.DataFrame) -> list[str]:
@@ -18,6 +14,7 @@ def extract_phrases(processed_chunks: pd.DataFrame) -> list[str]:
         list[str]: List of phrases extracted from the 'test' column.
     """
     try:
+        logger.info("Extracting phrases...")
         test_list = processed_chunks['test'].tolist()
         logger.info(f"Successfully extracted {len(test_list)} phrases")
         return test_list
@@ -36,6 +33,8 @@ def extract_data(processed_chunks: pd.DataFrame, classified_phrases: dict) -> pd
         pd.DataFrame: Processed DataFrame with renamed and filtered rows.
     """
     try:
+        logger.info("Extracting data...")
+
         # Create a reverse mapping from classified_phrases.
         reverse_mapping = {key.lower(): value for key, value in classified_phrases.items()}
 
@@ -63,3 +62,33 @@ def extract_data(processed_chunks: pd.DataFrame, classified_phrases: dict) -> pd
 
     except Exception as e:
         logger.error(f"Error while extracting data: {e}")
+
+
+if __name__ == "__main__":
+
+    data = [
+        {"test": "Haemoglobin", "result": "11.3", "unit": "gm/dl", "reference_range": "14 - 18"},
+        {"test": "R.B.C. Count", "result": "3.82", "unit": "mil./cu.mm", "reference_range": "4.5 - 6.5"},
+        {"test": "Total WBC Count", "result": "3.83x10^3", "unit": "/µL", "reference_range": "4 - 10"},
+        {"test": "Platelets", "result": "246000", "unit": "/cmm", "reference_range": "150000 - 450000"},
+        {"test": "Packed Cell Volume", "result": "32.7", "unit": "%", "reference_range": "40 - 54"},
+        {"test": "Mean Corpuscular Volume", "result": "85.6", "unit": "cubic micron", "reference_range": "76 - 96"},
+        {"test": "Mean Corpuscular Hemoglobin", "result": "29.5", "unit": "picograms", "reference_range": "27 - 32"},
+        {"test": "Mean corpuscular Hb Con.", "result": "34.5", "unit": "g/dl", "reference_range": "32 - 36"},
+        {"test": "Neutrophils", "result": "52", "unit": "%", "reference_range": None},
+        {"test": "Lymphocytes", "result": "39", "unit": "%", "reference_range": None},
+        {"test": "Eosinophil", "result": "01", "unit": "%", "reference_range": None},
+        {"test": "Monocytes", "result": "08", "unit": "%", "reference_range": None},
+        {"test": "Basophils", "result": "00", "unit": "%", "reference_range": None},
+        {"test": "Erythrocytes", "result": "Normocytic Normochromic", "unit": None, "reference_range": None},
+        {"test": "Leukocytes", "result": "Normal morphology", "unit": None, "reference_range": None}
+        ]
+    
+    processed_chunks = pd.DataFrame(data)
+
+    phrases = extract_phrases(processed_chunks)
+    print(phrases)
+    classified_phrases = {'Haemoglobin': 'Haemoglobin', 'R.B.C. Count': 'Unknown', 'Total WBC Count': 'WBC count', 'Platelets': 'Platelets', 'Packed Cell Volume': 'Unknown', 'Mean Corpuscular Volume': 'Unknown', 'Mean Corpuscular Hemoglobin': 'Unknown', 'Mean corpuscular Hb Con.': 'Unknown', 'Neutrophils': 'Neutrophil %', 'Lymphocytes': 'Lymphocyte %', 'Eosinophil': 'Unknown', 'Monocytes': 'Unknown', 'Basophils': 'Unknown', 'Erythrocytes': 'Unknown', 'Leukocytes': 'Unknown'}
+    valid_phrases = {p: c for p, c in classified_phrases.items() if c != "Unknown"}
+    extracted_data = extract_data(processed_chunks, valid_phrases)
+    print(extracted_data)

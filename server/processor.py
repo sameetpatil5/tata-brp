@@ -11,10 +11,6 @@ from pathlib import Path
 import datetime as dt
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 class Processor:
@@ -41,7 +37,8 @@ class Processor:
         Returns:
             str: File path of the preprocessed image.
         """
-        logger.info("Preprocessing image: %s", image_path)
+        logger.info(f"Preprocessing image...")
+        logger.debug(f"Preprocessing image: {image_path}")
         preprocessed_image = preprocess_image(image=image_path)
         self.image = preprocessed_image
 
@@ -53,7 +50,8 @@ class Processor:
         file_path = SAVE_DIR / f"{timestamp}.jpg"
         save_image(preprocessed_image, str(file_path))
 
-        logger.info("Saved preprocessed image to: %s", file_path)
+        logger.info(f"Saved preprocessed image")
+        logger.debug(f"Saved preprocessed image to: {file_path}")
         return str(file_path)
 
     def convert_image_to_markdown(self, image_path: str) -> None:
@@ -63,7 +61,8 @@ class Processor:
         Args:
             image_path (str): Path to the image file.
         """
-        logger.info("Converting image to markdown: %s", image_path)
+        logger.info(f"Converting image to markdown...")
+        logger.debug(f"Converting image to markdown: {image_path}")
         self.markdown = image_to_md(image_path=image_path)
 
     def perform_ocr(self, file_path: str = None) -> None:
@@ -76,7 +75,8 @@ class Processor:
         if self.file and file_path:
             raise ValueError("Either 'file' or 'file_path' should be provided, not both.")
         
-        logger.info("Performing OCR on image: %s", file_path or self.file)
+        logger.info(f"Performing OCR on image...")
+        logger.debug(f"Performing OCR on image: {file_path or self.file}")
         preprocessed_file_path = self.preprocess_image(file_path or self.file)
         self.convert_image_to_markdown(preprocessed_file_path)
 
@@ -87,7 +87,7 @@ class Processor:
         Args:
             markdown (str): Raw OCR markdown output.
         """
-        logger.info("Setting OCR markdown content.")
+        logger.info("Setting OCR markdown content...")
         self.markdown = markdown
 
     def format_markdown(self, markdown: str) -> None:
@@ -97,7 +97,7 @@ class Processor:
         Args:
             markdown (str): Raw OCR markdown output.
         """
-        logger.info("Formatting markdown content.")
+        logger.info("Formatting markdown content...")
         self.markdown = format_markdown(markdown)
 
     def process_chunks(self) -> pd.DataFrame:
@@ -107,7 +107,7 @@ class Processor:
         Returns:
             pd.DataFrame: DataFrame containing processed text chunks.
         """
-        logger.info("Processing text chunks from OCR markdown.")
+        logger.info("Processing text chunks from OCR markdown...")
         raw_chunks = batch_chunks(self.markdown)
         processed_chunks = [parse_chunks(chunk) for chunk in raw_chunks]
         bundled_chunks = bundle_chunks(processed_chunks)
@@ -123,7 +123,7 @@ class Processor:
         Returns:
             pd.DataFrame: DataFrame with extracted and classified phrases.
         """
-        logger.info("Detecting phrases from processed chunks.")
+        logger.info("Detecting phrases from processed chunks...")
         phrases = extract_phrases(processed_chunks)
         classified_phrases = detect_phrases(phrases)
         valid_phrases = {p: c for p, c in classified_phrases.items() if c != "Unknown"}
@@ -140,7 +140,7 @@ class Processor:
         Returns:
             pd.DataFrame: DataFrame with standardized units.
         """
-        logger.info("Converting units in extracted data.")
+        logger.info("Converting units in extracted data...")
         self.data = unit_conversion(phrase_data)
         return self.data
 
@@ -154,10 +154,10 @@ class Processor:
         if not self.markdown:
             raise ValueError("OCR markdown is not set. Please provide the OCR data.")
         
-        logger.info("Starting full OCR processing pipeline.")
+        logger.info("Starting full OCR processing pipeline...")
         self.format_markdown(self.markdown)
         processed_chunks = self.process_chunks()
         phrase_data = self.detect_phrases(processed_chunks)
         self.data = self.convert_units(phrase_data)
-        logger.info("OCR processing completed successfully.")
+        logger.info("OCR processing completed successfully")
         return self.data

@@ -2,10 +2,6 @@ import pandas as pd
 from pprint import pformat
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 def batch_chunks(markdown_content: str) -> list[str]:
@@ -19,7 +15,7 @@ def batch_chunks(markdown_content: str) -> list[str]:
         list[str]: A list of markdown table strings.
     """
     try:
-        logger.info("Batching chunks from markdown content")
+        logger.info("Batching chunks from markdown content...")
         table_chunks = []
         lines = markdown_content.strip().split("\n")
         
@@ -59,7 +55,7 @@ def parse_chunks(table_content: str) -> pd.DataFrame:
         pd.DataFrame: A DataFrame with columns 'test', 'result', 'unit', and 'reference_range'.
     """
     try:
-        logger.info("Parsing chunks")
+        logger.info("Parsing chunks...")
         lines = table_content.strip().split("\n")
         start_index = 2
         data = []
@@ -68,7 +64,6 @@ def parse_chunks(table_content: str) -> pd.DataFrame:
             cols = [col.strip() for col in line.split("|")[1:-1]]
 
             test, result, unit, reference_range = cols
-            # test, result, unit, reference_range = cols if len(cols) == 4 else cols + ["-"] # Backup debug
 
             # Replace "-" entries with None (NULL equivalent in pandas).
             result = None if result == "-" else result
@@ -77,7 +72,7 @@ def parse_chunks(table_content: str) -> pd.DataFrame:
 
             data.append({"test": test, "result": result, "unit": unit, "reference_range": reference_range})
 
-            logger.info(f"Parsed row form chunk: {pformat(data[-1])}")
+            logger.debug(f"Parsed row form chunk: {pformat(data[-1])}")
 
         # Create a DataFrame from the parsed data.
         df = pd.DataFrame(data)
@@ -103,7 +98,7 @@ def bundle_chunks(chunk_dataframes: list[pd.DataFrame]) -> pd.DataFrame:
         pd.DataFrame: A single DataFrame containing all the merged data.
     """
     try:
-        logger.info("Bundling chunks")
+        logger.info("Bundling chunks...")
         if not chunk_dataframes:
             logger.warning("Chunk dataframes is empty")
             return pd.DataFrame()
@@ -122,3 +117,78 @@ def bundle_chunks(chunk_dataframes: list[pd.DataFrame]) -> pd.DataFrame:
 
     except Exception as e:
         logger.error(f"Error while bundling chunks: {e}")
+
+if __name__ == "__main__":
+    formatted_markdown = """
+        # **Clinical Analysis Lab**
+
+        ## **Medical Lab Technical Result Sheet**
+
+        ### **Lab Details**
+        - **Reg No.:** -
+        - **NAME:** -
+        - **REF BY:** -
+        - **AGE:** - Years
+        - **SEX:** Male
+        - **DATE:** 23/11/2024
+
+        ---
+
+        ## **COMPLETE BLOOD COUNT**
+
+        | TEST                   | RESULT         | UNIT          | REFERENCE RANGE     |
+        |------------------------|---------------|--------------|---------------------|
+        | Haemoglobin           | 11.3          | gm/dl        | 14 - 18             |
+        | R.B.C. Count          | 3.82          | mil./cu.mm   | 4.5 - 6.5           |
+        | Total WBC Count       | 3.83x10^3     | /µL         | 4 - 10              |
+        | Platelets            | 246000        | /cmm        | 150000 - 450000     |
+
+        ---
+
+        ## **RED CELL ABSOLUTE VALUES**
+
+        | TEST                              | RESULT  | UNIT          | REFERENCE RANGE |
+        |-----------------------------------|--------|--------------|-----------------|
+        | Packed Cell Volume               | 32.7   | %            | 40 - 54         |
+        | Mean Corpuscular Volume          | 85.6   | cubic micron | 76 - 96         |
+        | Mean Corpuscular Hemoglobin      | 29.5   | picograms    | 27 - 32         |
+        | Mean corpuscular Hb Con.         | 34.5   | g/dl         | 32 - 36         |
+
+        ---
+
+        ## **DIFFERENTIAL COUNT**
+
+        | TEST          | RESULT | UNIT | REFERENCE RANGE |
+        |--------------|--------|------|-----------------|
+        | Neutrophils  | 52     | %    | -               |
+        | Lymphocytes  | 39     | %    | -               |
+        | Eosinophil   | 01     | %    | -               |
+        | Monocytes    | 08     | %    | -               |
+        | Basophils    | 00     | %    | -               |
+
+        ---
+
+        ## **PERIPHERAL SMEAR EXAMINATION**
+
+        | TEST          | RESULT                     | UNIT | REFERENCE RANGE |
+        |--------------|---------------------------|------|-----------------|
+        | Erythrocytes | Normocytic Normochromic   | -    | -               |
+        | Leukocytes   | Normal morphology         | -    | -               |
+
+        ---
+
+        ### **NOTE:**
+        The above results are subject to variations due to technical limitations. Correlation with clinical findings and other investigations should be performed.
+
+        **Condition of reporting:**  
+        Results are for the referring doctor's information. Test results may vary between laboratories or over time for the same patient. Only medical professionals familiar with reporting units, reference ranges, and limitations should interpret the results. **Not for judicial use.**
+
+        ---
+
+        ### **Medical Lab Technician**
+        """
+
+    raw_chunks = batch_chunks(formatted_markdown)
+    processed_chunks = [parse_chunks(chunk) for chunk in raw_chunks]
+    bundled_chunks = bundle_chunks(processed_chunks)
+    print(bundled_chunks)

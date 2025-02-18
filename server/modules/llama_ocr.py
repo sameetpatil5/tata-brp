@@ -3,10 +3,6 @@ import base64
 import os
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90B-Vision") -> str:
@@ -40,7 +36,8 @@ def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90
 
         # Prepare image for API request
         final_image_url = image_path if is_remote_file(image_path) else encode_image(image_path)
-        logger.info(f"Packed image in a final URL: {final_image_url}")
+        logger.info("Image URL loaded")
+        logger.debug(f"Packed image in a final URL: {final_image_url}")
 
         system_prompt = """Convert the provided image into Markdown format. 
         Ensure that all content from the page is included, such as headers, footers, subtexts, images (with alt text if possible), tables, and any other elements.

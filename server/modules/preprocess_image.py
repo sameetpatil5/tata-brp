@@ -5,10 +5,6 @@ from io import BytesIO
 from PIL import Image
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 def load_image(image_path: str) -> np.ndarray:
@@ -26,21 +22,24 @@ def load_image(image_path: str) -> np.ndarray:
         if "http" not in image_path:
             image_cv = cv.imread(image_path)
             if image_cv is None:
+                logger.info(f"Failed to load image from local path")
                 logger.error(f"Failed to load image from local path: {image_path}")
             else:
-                logger.info(f"Loaded image from local file path: {image_path}")
+                logger.info(f"Loaded image from local file path")
+                logger.debug(f"Loaded image from local file path: {image_path}")
             return image_cv
         
         response = requests.get(image_path)
         response.raise_for_status()
-        logger.info(f"Fetched image from URL: {image_path}")
+        logger.info(f"Fetched image from URL")
+        logger.debug(f"Fetched image from URL: {image_path}")
 
         image_pil = Image.open(BytesIO(response.content))
         image_array = np.array(image_pil)
         image_cv = cv.cvtColor(image_array, cv.COLOR_RGB2BGR)
         return image_cv
     except requests.RequestException as e:
-        logger.error(f"Error fetching image from URL {image_path}: {e}")
+        logger.error(f"Error fetching image from URL: {e}")
     except Exception as e:
         logger.error(f"Unexpected error in load_image: {e}")
     return None
@@ -53,11 +52,12 @@ def save_image(processed_image: np.ndarray, output_path: str) -> None:
         if processed_image is not None:
             cv.imwrite(output_path, processed_image)
             # Logic to save the processed image on Cloud
-            logger.info(f"Image saved successfully at: {output_path}")
+            logger.info(f"Image saved successfully")
+            logger.debug(f"Image saved successfully at: {output_path}")
         else:
             logger.warning("No processed image to save.")
     except Exception as e:
-        logger.error(f"Failed to save image at {output_path}: {e}")
+        logger.error(f"Failed to save image: {e}")
 
 def reorder_corner_points(points: np.ndarray) -> np.ndarray:
     """
@@ -274,6 +274,7 @@ def preprocess_image(image: np.ndarray) -> np.ndarray:
     """
     BORDER_SIZE = 20
     try:
+        logger.info("Preprocessing image...")
         # Load Image
         image = load_image(image_path)
         # Get image dimensions
@@ -292,6 +293,8 @@ def preprocess_image(image: np.ndarray) -> np.ndarray:
         image_bordered = adjust_borders(image_denoise, height, width, BORDER_SIZE)
         # Emphasize text
         image_emphasized = emphasize_text(image_bordered)
+
+        logger.info("Sucessfully preprocessed the image")
 
         return image_emphasized
     except Exception as e:

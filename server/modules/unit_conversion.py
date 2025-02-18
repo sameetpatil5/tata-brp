@@ -3,10 +3,6 @@ import re
 from pprint import pformat
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 def process_result(result: str) -> tuple[float, float]:
@@ -21,12 +17,15 @@ def process_result(result: str) -> tuple[float, float]:
         tuple[float, float]: A tuple containing the computed value and its multiplier.
     """
     try:
-        logger.debug(f"Processing result string: '{result}'", )
+        logger.debug(f"Processing result string: '{result}'")
+        logger.info(f"Processing result...")
 
         # If the input is a single number, return it directly
         if re.fullmatch(r"[\d\.]+", result):  
             value = float(result)
-            logger.info(f"Result is a single number: {value}")
+            logger.debug(f"Result is a single number: {value}")
+
+            logger.info("Processed result")
             return value, 1
 
         match = re.match(r"([\d\.]+)\s*x\s*([\d\.]+)\^?(\d+)?", result)
@@ -35,9 +34,13 @@ def process_result(result: str) -> tuple[float, float]:
             multiplier = float(match.group(2)) if match.group(2) else 1  # Number after 'x'
             exponent = int(match.group(3)) if match.group(3) else 1  # Exponent
 
-            result_value = base_num * pow(multiplier, exponent)
-            logger.info(f"Parsed result: base={base_num}, multiplier={multiplier}, exponent={exponent}, computed={result_value}")
-            return result_value
+            final_multiplier = pow(multiplier, exponent)
+
+            result_value = base_num * final_multiplier
+            logger.debug(f"Parsed result: base={base_num}, multiplier={multiplier}, exponent={exponent}, computed={result_value}")
+            
+            logger.info("Processed result")
+            return base_num, final_multiplier
         
         logger.error(f"Invalid format for result: '{result}'")
     except Exception as e:
@@ -55,13 +58,16 @@ def process_reference_range(reference_range: str, multiplier: float) -> tuple[fl
         tuple[float, float]: A tuple containing the minimum and maximum values.
     """
     try:
+        logger.info("Processing reference range...")
         logger.debug(f"Processing reference range string: '{reference_range}' with multiplier: {multiplier}")
 
         match = re.match(r"([\d\.]+)\s*-\s*([\d\.]+)", reference_range)
         if match:
             min_value = float(match.group(1)) * multiplier
             max_value = float(match.group(2)) * multiplier
-            logger.info(f"Parsed reference range: min={min_value}, max={max_value}")
+            logger.debug(f"Parsed reference range: min={min_value}, max={max_value}")
+
+            logger.info("Processed reference range")
             return min_value, max_value
         else:
             logger.error(f"Invalid format for reference range: '{reference_range}'")
@@ -85,6 +91,7 @@ def unit_conversion(units_df: pd.DataFrame) -> dict:
 
         for index, row in units_df.iterrows():
             try:
+                logger.info(f"Processing row {index}...")
                 logger.debug(f"Processing row {index}: {pformat(row.to_dict())}")
 
                 base_num, multiplier = process_result(row["result"])
@@ -98,7 +105,7 @@ def unit_conversion(units_df: pd.DataFrame) -> dict:
                     },
                 }
 
-                logger.info(f"Converted row {index} successfully: {pformat(converted_entry)}")
+                logger.debug(f"Converted row {index} successfully: {pformat(converted_entry)}")
                 converted_results.append(converted_entry)
 
             except ValueError as e:
@@ -109,3 +116,18 @@ def unit_conversion(units_df: pd.DataFrame) -> dict:
 
     except Exception as e:
         logger.error(f"Error during unit conversion: {e}")
+
+
+if __name__ == "__main__":
+    data = {
+    "test": ["Haemoglobin", "WBC count", "Platelets", "Neutrophil %", "Lymphocyte %"],
+    "result": ["11.3", "3.83x10^3", "246000", "52", "39"],
+    "unit": ["gm/dl", "/µL", "/cmm", "%", "%"],
+    "reference_range": ["14 - 18", "4 - 10", "150000 - 450000", None, None]
+}
+
+    df = pd.DataFrame(data)
+
+    converted_units = unit_conversion(df)
+
+    print(converted_units)
