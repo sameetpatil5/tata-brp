@@ -1,15 +1,31 @@
-# api.py
 from fastapi import FastAPI
-from .routes import router as OCRRouter
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from .routes import router
 
-# Initialize FastAPI app
-app = FastAPI()
+# Initialize FastAPI app with metadata
+app = FastAPI(
+    title="TATA Blood Report Processor API",
+    description="An API to process blood report markdown and extract structured data.",
+    version="1.2.0"
+)
 
-# Include the router from routes.py
-app.include_router(OCRRouter, prefix="/ocr")
+# Add CORS middleware (optional but useful)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (NOT recommended for production)
+    allow_credentials=True,  # Supports cookies and authentication headers
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allows all headers (Authorization, Content-Type, etc.)
+)
 
-@app.get("/", tags=["Root"])
-async def read_root():
-    return {
-        "message": "Welcome to the TATA Project OCR API!"
-    }
+# Include the router
+app.include_router(router)
+
+# Global exception handling (optional)
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}"},
+    )
