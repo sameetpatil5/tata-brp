@@ -3,13 +3,38 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .routes import router
 import logging
+import colorlog
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - Line %(lineno)d: %(message)s"
-)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
+formatter = colorlog.ColoredFormatter(
+    "%(asctime)s - %(log_color)s%(levelname)-8s%(reset)s - "
+    "%(module)s - %(funcName)s - %(lineno)d: "
+    "%(message_log_color)s%(message)s%(reset)s",
+    log_colors={
+    "DEBUG": "cyan",
+    "INFO": "green",
+    "WARNING": "yellow",
+    "ERROR": "red",
+    "CRITICAL": "bold_red",
+    },
+    secondary_log_colors={
+        "message": {
+            "DEBUG": "cyan",
+            "INFO": "light_green",
+            "WARNING": "light_yellow",
+            "ERROR": "light_red",
+            "CRITICAL": "bold_red",
+        }
+    },
+)
+
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+
+if not logger.hasHandlers():
+    logger.addHandler(handler)
 
 # Initialize FastAPI app with metadata
 app = FastAPI(
