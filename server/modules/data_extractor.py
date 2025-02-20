@@ -17,6 +17,7 @@ def extract_phrases(processed_chunks: pd.DataFrame) -> list[str]:
         logger.info("Extracting phrases...")
         test_list = processed_chunks['test'].tolist()
         logger.info(f"Successfully extracted {len(test_list)} phrases")
+        logger.debug(f"Extracted phrases: \n{test_list}")
         return test_list
     except Exception as e:
         logger.error(f"Error while extracting phrases: {e}")
@@ -57,6 +58,7 @@ def extract_data(processed_chunks: pd.DataFrame, classified_phrases: dict) -> pd
         filtered_data = filtered_data.reset_index(drop=True)
 
         logger.info(f"Successfully extracted {len(filtered_data)} data rows")
+        logger.debug(f"Extracted data: \n{filtered_data}")
 
         return filtered_data
 

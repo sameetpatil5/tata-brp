@@ -61,9 +61,12 @@ def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90
             ],
         )
 
+        markdown = response.choices[0].message.content
+        
         logger.info("Response successfully recieved from TogetherAI vision model")
+        logger.debug(f"Response content: \n{markdown}")
 
-        return response.choices[0].message.content
+        return 
     except Exception as e:
         logger.error(f"Error while converting image to markdown: {e}")
 

@@ -112,6 +112,7 @@ def unit_conversion(units_df: pd.DataFrame) -> dict:
                 logger.error(f"Error processing row {index}: {e}")
 
         logger.info("Unit conversion completed for all rows.")
+        logger.debug(f"Converted results: \n{converted_results}")
         return converted_results
 
     except Exception as e:

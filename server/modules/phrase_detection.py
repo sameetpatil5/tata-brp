@@ -22,8 +22,13 @@ def detect_phrases(input_phrases: list[str]) -> dict:
              open("data/phrase_data/valid_short_terms.txt", "r") as valid_short_terms_file:
 
             classification_dict = json.load(phrase_file)
+            logger.debug(f"Classification Dictionary: \n{classification_dict}")
             common_terms = set(common_phrases_file.read().lower().split(","))
+            logger.debug(f"Common terms: \n{common_terms}")
             valid_short_terms = set(valid_short_terms_file.read().lower().split(","))
+            logger.debug(f"Valid short terms: \n{valid_short_terms}")
+
+            logger.info("Successfully loaded classification data from JSON and text files.")
     except Exception as e:
         logger.error(f"Error loading classification data: {e}")
         return {}
@@ -78,6 +83,7 @@ def detect_phrases(input_phrases: list[str]) -> dict:
             logger.debug(f"No good match found for '{phrase}' (best fuzzy score: {score}). Classified as 'Unknown'.")
 
     logger.info("Phrase classification completed.")
+    logger.debug(f"Detected phrases: \n{classification_results}")
     return classification_results
 
 if __name__ == "__main__":

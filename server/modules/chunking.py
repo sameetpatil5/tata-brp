@@ -35,6 +35,7 @@ def batch_chunks(markdown_content: str) -> list[str]:
         if current_table:
             table_chunks.append("\n".join(current_table))
         logger.info(f"Successfully batched {len(table_chunks)} chunks from markdown content")
+        logger.debug(f"Batched chunks: \n{pformat(table_chunks)}")
         return table_chunks
 
     except Exception as e:
@@ -72,7 +73,7 @@ def parse_chunks(table_content: str) -> pd.DataFrame:
 
             data.append({"test": test, "result": result, "unit": unit, "reference_range": reference_range})
 
-            logger.debug(f"Parsed row form chunk: {pformat(data[-1])}")
+            logger.debug(f"Parsed row form chunk: \n{pformat(data[-1])}")
 
         # Create a DataFrame from the parsed data.
         df = pd.DataFrame(data)
@@ -113,6 +114,7 @@ def bundle_chunks(chunk_dataframes: list[pd.DataFrame]) -> pd.DataFrame:
         merged_chunk = pd.concat(chunk_dataframes, ignore_index=True)  # Merge all DataFrames.
 
         logger.info("Successfully bundled chunks")
+        logger.debug(f"Bundled chunks: \n{pformat(merged_chunk)}")
         return merged_chunk
 
     except Exception as e:

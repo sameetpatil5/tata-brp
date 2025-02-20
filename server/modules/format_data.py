@@ -75,6 +75,7 @@ def format_markdown(input_markdown: str) -> str:
         response = model.generate_content(prompt)
         formatted_markdown = response.text
         logger.info("Markdown formatting completed")
+        logger.debug(f"Formatted markdown: {formatted_markdown}")
         return formatted_markdown
     except Exception as e:
         logger.error(f"Error during formatting markdown using AI: {e}")

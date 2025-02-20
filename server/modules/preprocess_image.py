@@ -262,12 +262,12 @@ def emphasize_text(image: np.ndarray) -> np.ndarray:
     return image
 
 
-def preprocess_image(image: np.ndarray) -> np.ndarray:
+def preprocess_image(image: str) -> np.ndarray:
     """
     Preprocesses an image for OCR.
     
     Args:
-        image (np.ndarray): Input Image
+        image (str): Path of input Image
     
     Returns:
         numpy.ndarray: Preprocessed image.
