@@ -4,12 +4,14 @@ from .modules.data_extractor import extract_phrases, extract_data
 from .modules.chunking import batch_chunks, parse_chunks, bundle_chunks
 from .modules.format_data import format_markdown
 from .modules.llama_ocr import image_to_md
-from .modules.preprocess_image import preprocess_image, save_image
+from .modules.preprocess_image import preprocess_image, save_image, load_image
+from .modules.image_validation import validate_image
 
 import pandas as pd
 from pathlib import Path
 import datetime as dt
 import logging
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,13 @@ class Processor:
         logger.info(f"Preprocessing image...")
         logger.debug(f"Preprocessing image: {image_path}")
         preprocessed_image = preprocess_image(image=image_path)
-        self.image = preprocessed_image
+
+        if validate_image(Image.fromarray(preprocessed_image)):
+            self.image = preprocessed_image
+            logger.info("Preprocessed image is valid. Using preprocessed image")
+        else:
+            self.image = load_image(image_path=image_path)
+            logger.info("Preprocessed image is invalid. Using original image")
 
         BASE_DIR = Path(__file__).resolve().parent
         SAVE_DIR = BASE_DIR / "data/preprocessed"
@@ -48,7 +56,7 @@ class Processor:
 
         timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y_%m_%d_%H_%M_%S")
         file_path = SAVE_DIR / f"{timestamp}.jpg"
-        save_image(preprocessed_image, str(file_path))
+        save_image(self.image, str(file_path))
 
         logger.info(f"Saved preprocessed image")
         logger.debug(f"Saved preprocessed image to: {file_path}")
