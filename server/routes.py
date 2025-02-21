@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from .models import Markdown, FilePath
-from .demo_processor import Processor
+from .processor import Processor
 from phi.workflow import RunResponse
 from typing import Optional, Iterator
 import logging
