@@ -76,8 +76,9 @@ The **Extractor** must compute additional values using extracted test data.
     | TEST        | RESULT   | UNIT  | REFERENCE RANGE |
     |-------------|----------|-------|-----------------|
     ```
-4. **Maintain the original medical values exactly as they appear.** Do not modify any numerical values, units, or ranges.  
-5. **The output must contain only the extracted tests in Markdown table format.** Remove any extra text or non-test information.  
+4. The TEST column must always include the names form the *Standardized Test Name** and **Derived Test** only the alternative names are for reference if they are found replace the test name with a given **Standard Test Name**.
+5. **Maintain the original medical values exactly as they appear.** Do not modify any numerical values, units, or ranges.  
+6. **The output must contain only the extracted tests in Markdown table format.** Remove any extra text or non-test information.  
 """
 
 EXTRACTOR_PROMPT = """
