@@ -66,9 +66,10 @@ def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90
         logger.info("Response successfully recieved from TogetherAI vision model")
         logger.debug(f"Response content: \n{markdown}")
 
-        return 
+        return markdown
     except Exception as e:
         logger.error(f"Error while converting image to markdown: {e}")
+        return ""
 
 
 def encode_image(image_path: str) -> str:
@@ -93,7 +94,7 @@ def is_remote_file(image_path: str) -> bool:
 
 # Example usage:
 if __name__ == "__main__":
-    image_path = "E:/SAM ENGINEERINGs/TATA BRP/tests/image.jpg"
+    image_path = "E:/SAM ENGINEERINGs/TATA BRP/data/test_image.jpg"
     result = image_to_md(image_path)
     print(result)
 
