@@ -71,8 +71,12 @@ async def process(input_params: dict = Depends(validate_input)) -> dict:
     Raises an HTTPException with status code 400 if the input is invalid.
     Raises an HTTPException with status code 500 if an error occurs during processing.
     """
-    file_path = input_params["file_path"]
-    input_data = input_params["input_data"]
+
+    file_path = input_params.get("file_path", None)
+    file_path = file_path.file_path if file_path else None  
+
+    input_data = input_params.get("input_data", None)
+    input_data = input_data.markdown if input_data else None
 
     logger.info("PROCESS route hit")
 
@@ -83,9 +87,9 @@ async def process(input_params: dict = Depends(validate_input)) -> dict:
 
         response_data = list(response)[-1].content
 
-        data = json.loads(data)["content"]
+        data = json.loads(response_data)["content"]
 
-        return {"data": data} if data else logger.error("Returned data is empty"); raise HTTPException(status_code=204, detail=f"Processing the input returned No Content: {e}")
+        return data if data else logger.error("Returned data is empty"); raise HTTPException(status_code=204, detail=f"Processing the input returned No Content: {e}")
     
     except Exception as e:
         logger.error(f"Error processing markdown: {e}")
