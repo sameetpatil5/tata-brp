@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from .models import Markdown, FilePath
-from .processor import Processor
+from .demo_processor import Processor
+from phi.workflow import RunResponse
+from typing import Optional, Iterator
 import logging
-from typing import Optional
+import json
+
 
 logger = logging.getLogger(__name__)
 
@@ -76,17 +79,11 @@ async def process(input_params: dict = Depends(validate_input)) -> dict:
     try:
         data = {}
 
-        if input_data:
-            # Process from input markdown
-            logger.info("Processing from input data")
-            processor.set_markdown(input_data.markdown)
-            data = processor.process()
-        elif file_path:
-            # Process from image
-            logger.info(f"Processing file...")
-            logger.debug(f"Processing file from path: {file_path.file_path}")
-            processor.perform_ocr(file_path.file_path)
-            data = processor.process()
+        response: Iterator[RunResponse] = processor.run(file=file_path, markdown=input_data)
+
+        response_data = list(response)[-1].content
+
+        data = json.loads(data)["content"]
 
         return {"data": data} if data else logger.error("Returned data is empty"); raise HTTPException(status_code=204, detail=f"Processing the input returned No Content: {e}")
     
