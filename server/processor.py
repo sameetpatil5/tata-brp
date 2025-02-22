@@ -41,14 +41,14 @@ class Processor:
         """
         logger.info(f"Preprocessing image...")
         logger.debug(f"Preprocessing image: {image_path}")
-        preprocessed_image = preprocess_image(image=image_path)
+        preprocessed_image = preprocess_image(image_path=image_path)
 
         if validate_image(Image.fromarray(preprocessed_image)):
             self.image = preprocessed_image
             logger.info("Preprocessed image is valid. Using preprocessed image")
         else:
             self.image = load_image(image_path=image_path)
-            logger.info("Preprocessed image is invalid. Using original image")
+            logger.warning("Preprocessed image is invalid. Using original image")
 
         BASE_DIR = Path(__file__).resolve().parent
         SAVE_DIR = BASE_DIR / "data/preprocessed"
