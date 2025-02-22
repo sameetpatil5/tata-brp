@@ -5,7 +5,7 @@ from phi.workflow import RunResponse
 from typing import Optional, Iterator
 import logging
 import json
-
+from pprint import pformat
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,9 @@ async def process(input_params: dict = Depends(validate_input)) -> dict:
         response_data = list(response)[-1].content
 
         data = json.loads(response_data)["content"]
+
+        logger.info("Successfully processed the input")
+        logger.debug(f"Data: {pformat(data)}")
 
         return data if data else logger.error("Returned data is empty"); raise HTTPException(status_code=204, detail=f"Processing the input returned No Content: {e}")
     

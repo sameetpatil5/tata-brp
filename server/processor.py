@@ -60,8 +60,13 @@ class Processor(Workflow):
             return
         try:
             formatted_markdown = self.formatter.run(f"""{FORMATTER_PROMPT.replace("{input_markdown}", f"{self.markdown}")}""")
+            logger.info("Markdown formatted")
+            logger.debug(f"Formatted markdown:\n {formatted_markdown.content}")
             extracted_markdown = self.extractor.run(f"""{EXTRACTOR_PROMPT.replace("{formatted_markdown}", f"{formatted_markdown.content}")}""")
+            logger.info("Markdown extracted")
+            logger.debug(f"Extracted markdown:\n {extracted_markdown.content}")
             data = self.converter.run(f"""{CONVERTER_PROMPT.replace("{extracted_markdown}", f"{extracted_markdown.content}")}""")
+            logger.info("Markdown converted to data")
             yield RunResponse(content=json.dumps(data.model_dump(), indent=2), event=RunEvent.workflow_completed)
             return
         except Exception as e:
@@ -94,7 +99,7 @@ class Processor(Workflow):
                     logger.info("Preprocessed image is invalid. Using original image")
             self.markdown = image_to_md(image_path)
             logger.info("Image converted to markdown")
-            logger.info("Markdown:\n", self.markdown)
+            logger.info(f"Markdown:\n {self.markdown}")
             return
         elif markdown:
             self.markdown = markdown
