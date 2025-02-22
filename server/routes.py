@@ -79,6 +79,7 @@ async def process(input_params: dict = Depends(validate_input)) -> dict:
         if input_data:
             # Process from input markdown
             logger.info("Processing from input data")
+            logger.debug(f"Input data: {input_data.markdown}")
             processor.set_markdown(input_data.markdown)
             data = processor.process()
         elif file_path:

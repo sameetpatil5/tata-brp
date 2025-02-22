@@ -5,7 +5,7 @@ from .routes import router
 import logging
 import colorlog
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("server")
 logger.setLevel(logging.DEBUG)
 
 formatter = colorlog.ColoredFormatter(
