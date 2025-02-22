@@ -175,3 +175,5 @@ cython_debug/
 .prettierrc
 
 /tests
+/data/*.jpg
+/server/data
