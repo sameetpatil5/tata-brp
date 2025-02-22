@@ -254,7 +254,7 @@ def emphasize_text(image: np.ndarray) -> np.ndarray:
 
         _, image_emphasized_text = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
         image_emphasized_text = cv.bitwise_not(image_emphasized_text)
-        image_emphasized_text = cv.dilate(image, kernel, iterations=1)
+        image_emphasized_text = cv.dilate(image_emphasized_text, kernel, iterations=1)
         image_emphasized_text = cv.bitwise_not(image_emphasized_text)
         return image_emphasized_text
     except Exception as e:
