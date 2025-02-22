@@ -60,13 +60,6 @@ EXTRACTOR_INSTRUCTIONS = """
 | Lymphocyte %, Lymphocytes | **Lymphocyte %** |
 | Hemoglobin, Haemoglobin, Hb | **Haemoglobin** |
 ---
-### **Derived Values (Calculated Tests)**
-The **Extractor** must compute additional values using extracted test data.
-
-| **Derived Test** | **Formula** |
-|------------------|------------|
-| **Absolute Neutrophil Count (ANC)** | `WBC count x Neutrophil %` |
-| **Absolute Lymphocyte Count (ALC)** | `WBC count x Lymphocyte %` |
 
 ### **Strict Extraction Rules:**  
 1. **Only extract tests from the provided test list**. Ignore any other tests.  
@@ -89,6 +82,16 @@ EXTRACTOR_PROMPT = """
 
 ### **Provide the extracted markdown table below:**"
 """
+
+# TODO: Fix the derived values
+# ### **Derived Values (Calculated Tests)**
+# The **Extractor** must compute additional values using extracted test data.
+
+# | **Derived Test** | **Formula** |
+# |------------------|------------|
+# | **Absolute Neutrophil Count (ANC)** | `WBC count x Neutrophil %` |
+# | **Absolute Lymphocyte Count (ALC)** | `WBC count x Lymphocyte %` |
+
 
 ### **Converter Prompt:**
 CONVERTER_INSTRUCTIONS = """
