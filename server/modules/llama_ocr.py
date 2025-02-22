@@ -37,7 +37,7 @@ def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90
         # Prepare image for API request
         final_image_url = image_path if is_remote_file(image_path) else encode_image(image_path)
         logger.info("Image URL loaded")
-        logger.debug(f"Packed image in a final URL: {final_image_url}")
+        logger.debug(f"Packed image in a final URL: {final_image_url[:50]}...")
 
         system_prompt = """Convert the provided image into Markdown format. 
         Ensure that all content from the page is included, such as headers, footers, subtexts, images (with alt text if possible), tables, and any other elements.
@@ -66,7 +66,7 @@ def image_to_md(image_path: str, api_key: str = None, model: str = "Llama-3.2-90
         logger.info("Response successfully recieved from TogetherAI vision model")
         logger.debug(f"Response content: \n{markdown}")
 
-        return 
+        return markdown
     except Exception as e:
         logger.error(f"Error while converting image to markdown: {e}")
 
