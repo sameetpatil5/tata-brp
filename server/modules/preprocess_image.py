@@ -262,7 +262,7 @@ def emphasize_text(image: np.ndarray) -> np.ndarray:
     return image
 
 
-def preprocess_image(image: str) -> np.ndarray:
+def preprocess_image(image_path: str) -> np.ndarray:
     """
     Preprocesses an image for OCR.
     
@@ -302,7 +302,6 @@ def preprocess_image(image: str) -> np.ndarray:
     return image
 
 if __name__ == "__main__":
-    image_path = "E:/SAM ENGINEERINGs/TATA BRP/tests/image.jpg"
-    image = load_image(image_path)
-    processed_image = preprocess_image(image)
-    save_image(processed_image, "E:/SAM ENGINEERINGs/TATA BRP/tests/new_processed_image.jpg")
+    image_path = "E:/SAM ENGINEERINGs/TATA BRP/data/test_image.jpg"
+    processed_image = preprocess_image(image_path)
+    save_image(processed_image, "E:/SAM ENGINEERINGs/TATA BRP/data/test_new_processed_image.jpg")
