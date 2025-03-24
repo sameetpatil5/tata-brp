@@ -1,11 +1,15 @@
-import pandas as pd
 import re
+from typing import Dict, Union, Tuple, Optional
 from pprint import pformat
 import logging
 
+import pandas as pd
+
 logger = logging.getLogger(__name__)
 
-def process_result(result: str) -> tuple[float, float]:
+TestData = Dict[str, Union[float, str, Tuple[Optional[float], Optional[float]]]]
+
+def process_result(result: str) -> Optional[Tuple[float, float]]:
     """
     Processes a result string of the form '4.5x10^3', '2x5^4', '10x30', etc.,
     and returns the computed value.
@@ -14,39 +18,29 @@ def process_result(result: str) -> tuple[float, float]:
         result (str): The input string containing a multiplication expression.
 
     Returns:
-        tuple[float, float]: A tuple containing the computed value and its multiplier.
+        Tuple(float, float): A tuple containing the computed value and its multiplier.
     """
-    try:
-        logger.debug(f"Processing result string: '{result}'")
-        logger.info(f"Processing result...")
+    logger.debug(f"Processing result: '{result}'")
+    
+    if not isinstance(result, str) or not result.strip():
+        logger.error("Invalid result format: Input is not a string or empty.")
+        return None
+    
+    if re.fullmatch(r"\d+(\.\d+)?", result):  # Single number case
+        return float(result), 1
+    
+    match = re.match(r"(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)\^?(\d+)?", result)
+    if match:
+        base_num = float(match.group(1))  # First number before 'x'
+        multiplier = float(match.group(2)) if match.group(2) else 1  # Number after 'x'
+        exponent = int(match.group(3)) if match.group(3) else 1  # Exponent
 
-        # If the input is a single number, return it directly
-        if re.fullmatch(r"[\d\.]+", result):  
-            value = float(result)
-            logger.debug(f"Result is a single number: {value}")
+        return base_num, pow(multiplier, exponent)
+    
+    logger.error(f"Invalid result format: '{result}'")
+    return None
 
-            logger.info("Processed result")
-            return value, 1
-
-        match = re.match(r"([\d\.]+)\s*x\s*([\d\.]+)\^?(\d+)?", result)
-        if match:
-            base_num = float(match.group(1))  # First number before 'x'
-            multiplier = float(match.group(2)) if match.group(2) else 1  # Number after 'x'
-            exponent = int(match.group(3)) if match.group(3) else 1  # Exponent
-
-            final_multiplier = pow(multiplier, exponent)
-
-            result_value = base_num * final_multiplier
-            logger.debug(f"Parsed result: base={base_num}, multiplier={multiplier}, exponent={exponent}, computed={result_value}")
-            
-            logger.info("Processed result")
-            return base_num, final_multiplier
-        
-        logger.error(f"Invalid format for result: '{result}'")
-    except Exception as e:
-        logger.error(f"Error while processing result: {e}")
-
-def process_reference_range(reference_range: str, multiplier: float) -> tuple[float, float]:
+def process_reference_range(reference_range: str, multiplier: float) -> Optional[Tuple[float, float]]:
     """
     Processes a reference range string of the form '3.5 - 6.0' and returns
     the minimum and maximum values.
@@ -55,26 +49,19 @@ def process_reference_range(reference_range: str, multiplier: float) -> tuple[fl
         reference_range (str): The input string containing a range of values.
 
     Returns:
-        tuple[float, float]: A tuple containing the minimum and maximum values.
+        Tuple(float, float): A tuple containing the minimum and maximum values.
     """
-    try:
-        logger.info("Processing reference range...")
-        logger.debug(f"Processing reference range string: '{reference_range}' with multiplier: {multiplier}")
+    if not reference_range:
+        return None
+    
+    match = re.match(r"(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)", reference_range)
+    if match:
+        return float(match.group(1)) * multiplier, float(match.group(2)) * multiplier
+    
+    logger.error(f"Invalid reference range format: '{reference_range}'")
+    return None
 
-        match = re.match(r"([\d\.]+)\s*-\s*([\d\.]+)", reference_range)
-        if match:
-            min_value = float(match.group(1)) * multiplier
-            max_value = float(match.group(2)) * multiplier
-            logger.debug(f"Parsed reference range: min={min_value}, max={max_value}")
-
-            logger.info("Processed reference range")
-            return min_value, max_value
-        else:
-            logger.error(f"Invalid format for reference range: '{reference_range}'")
-    except Exception as e:
-        logger.error(f"Error while processing reference range: {e}")
-
-def unit_conversion(units_df: pd.DataFrame) -> dict:
+def process_unit(data: pd.DataFrame) -> Dict[str, TestData]:
     """
     Convert units in a DataFrame using regex patterns and target unit mappings.
 
@@ -84,41 +71,70 @@ def unit_conversion(units_df: pd.DataFrame) -> dict:
     Returns:
         dict: Dictionary mapping tests to their converted result values for the target unit.
     """
-    try:
-        logger.info(f"Starting unit conversion for {len(units_df)} rows.")
+    if not isinstance(data, pd.DataFrame) or data.empty:
+        logger.error("Invalid input: Expected a non-empty pandas DataFrame.")
+        return {}
+    
+    logger.info(f"Processing {len(data)} rows for unit conversion...")
+    converted_results = {}
+    
+    for index, row in data.iterrows():
+        test_name = row.get("test")
+        result = row.get("result")
+        unit = row.get("unit")
+        reference_range = row.get("reference_range")
+        
+        if not test_name or not result or not unit:
+            logger.warning(f"Skipping row {index} due to missing required fields.")
+            continue
+        
+        processed_result = process_result(result)
+        if not processed_result:
+            logger.warning(f"Skipping row {index}: Invalid result format.")
+            continue
+        
+        base_num, multiplier = processed_result
+        ref_range = process_reference_range(reference_range, multiplier) if reference_range else (None, None)
+        
+        converted_results[test_name] = {
+            "result": base_num * multiplier,
+            "unit": unit,
+            "reference-range": ref_range
+        }
+        logger.debug(f"Converted row {index}:{test_name} successfully: {pformat(converted_results[test_name])}")
 
-        converted_results = []
+    logger.info("Unit conversion completed successfully.")
+    return converted_results
 
-        for index, row in units_df.iterrows():
-            try:
-                logger.info(f"Processing row {index}...")
-                logger.debug(f"Processing row {index}: {pformat(row.to_dict())}")
+def add_derived_tests(converted_units: Dict[str, TestData]) -> Dict[str, TestData]:
+    """
+    Add derived tests to the converted units dictionary.
 
-                base_num, multiplier = process_result(row["result"])
-                min_value, max_value = process_reference_range(row["reference_range"], multiplier) if row["reference_range"] else (None, None)
+    Args:
+        converted_units (dict): Dictionary mapping tests to their converted result values for the target unit.
 
-                converted_entry = {
-                    row["test"]: {
-                        "result": base_num * multiplier,
-                        "unit": row["unit"],
-                        "reference-range": (min_value, max_value)
-                    },
-                }
+    Returns:
+        dict: Updated dictionary with additional derived tests.
+    """
+    data = converted_units.copy()
 
-                logger.debug(f"Converted row {index} successfully: {pformat(converted_entry)}")
-                converted_results.append(converted_entry)
+    if "WBC count" in converted_units and "Neutrophil %" in converted_units:
+        data["Absolute Neutrophil count"] = {
+            "result": converted_units["WBC count"]["result"] * converted_units["Neutrophil %"]["result"] / 100,
+            "unit": converted_units["WBC count"]["unit"],
+            "reference-range": (None, None),
+        }
 
-            except ValueError as e:
-                logger.error(f"Error processing row {index}: {e}")
+    if "WBC count" in converted_units and "Lymphocyte %" in converted_units:
+        data["Absolute Lymphocyte count"] = {
+            "result": converted_units["WBC count"]["result"] * converted_units["Lymphocyte %"]["result"] / 100,
+            "unit": converted_units["WBC count"]["unit"],
+            "reference-range": (None, None),
+        }
 
-        logger.info("Unit conversion completed for all rows.")
-        logger.debug(f"Converted results: \n{converted_results}")
-        return converted_results
+    return data
 
-    except Exception as e:
-        logger.error(f"Error during unit conversion: {e}")
-
-
+# Test
 if __name__ == "__main__":
     data = {
     "test": ["Haemoglobin", "WBC count", "Platelets", "Neutrophil %", "Lymphocyte %"],
@@ -128,7 +144,6 @@ if __name__ == "__main__":
 }
 
     df = pd.DataFrame(data)
-
-    converted_units = unit_conversion(df)
-
-    print(converted_units)
+    converted_units = process_unit(df)
+    data = add_derived_tests(converted_units)
+    print(data)
