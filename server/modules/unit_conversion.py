@@ -11,14 +11,15 @@ TestData = Dict[str, Union[float, str, Tuple[Optional[float], Optional[float]]]]
 
 def process_result(result: str) -> Optional[Tuple[float, float]]:
     """
-    Processes a result string of the form '4.5x10^3', '2x5^4', '10x30', etc.,
-    and returns the computed value.
+    Parses and evaluates a numerical result string that may include multipliers 
+    (e.g., '4.5x10^3', '2x5^4', '10x30'). Extracts the base value and its multiplier.
 
     Args:
-        result (str): The input string containing a multiplication expression.
+        result (str): The input string containing a numeric value with potential multipliers.
 
     Returns:
-        Tuple(float, float): A tuple containing the computed value and its multiplier.
+        Optional[Tuple[float, float]]: A tuple containing the base numeric value and its computed multiplier.
+        Returns None if the input format is invalid.
     """
     logger.debug(f"Processing result: '{result}'")
     
@@ -42,14 +43,15 @@ def process_result(result: str) -> Optional[Tuple[float, float]]:
 
 def process_reference_range(reference_range: str, multiplier: float) -> Optional[Tuple[float, float]]:
     """
-    Processes a reference range string of the form '3.5 - 6.0' and returns
-    the minimum and maximum values.
+    Parses a reference range string (e.g., '3.5 - 6.0') and scales it by a given multiplier.
 
     Args:
-        reference_range (str): The input string containing a range of values.
+        reference_range (str): A string representing a range of numerical values.
+        multiplier (float): The scaling factor to apply to the extracted range values.
 
     Returns:
-        Tuple(float, float): A tuple containing the minimum and maximum values.
+        Optional[Tuple[float, float]]: A tuple containing the minimum and maximum values after scaling.
+        Returns None if the input format is invalid.
     """
     if not reference_range:
         return None
@@ -63,13 +65,15 @@ def process_reference_range(reference_range: str, multiplier: float) -> Optional
 
 def process_unit(data: pd.DataFrame) -> Dict[str, TestData]:
     """
-    Convert units in a DataFrame using regex patterns and target unit mappings.
+    Processes a DataFrame containing test results, converting units and extracting 
+    relevant numerical values.
 
     Args:
-        units_df (pd.DataFrame): DataFrame containing 'test', 'result', 'unit', and 'reference_range' columns.
+        data (pd.DataFrame): A DataFrame with 'test', 'result', 'unit', and 'reference_range' columns.
 
     Returns:
-        dict: Dictionary mapping tests to their converted result values for the target unit.
+        Dict[str, TestData]: A dictionary mapping test names to their converted values, 
+        including computed results and reference ranges.
     """
     if not isinstance(data, pd.DataFrame) or data.empty:
         logger.error("Invalid input: Expected a non-empty pandas DataFrame.")
@@ -108,13 +112,14 @@ def process_unit(data: pd.DataFrame) -> Dict[str, TestData]:
 
 def add_derived_tests(converted_units: Dict[str, TestData]) -> Dict[str, TestData]:
     """
-    Add derived tests to the converted units dictionary.
+    Computes and adds derived tests (e.g., Absolute Neutrophil Count, Absolute Lymphocyte Count)
+    based on existing test values.
 
     Args:
-        converted_units (dict): Dictionary mapping tests to their converted result values for the target unit.
+        converted_units (Dict[str, TestData]): A dictionary containing test results with converted units.
 
     Returns:
-        dict: Updated dictionary with additional derived tests.
+        Dict[str, TestData]: An updated dictionary with additional derived test values.
     """
     data = converted_units.copy()
 
@@ -131,6 +136,8 @@ def add_derived_tests(converted_units: Dict[str, TestData]) -> Dict[str, TestDat
             "unit": converted_units["WBC count"]["unit"],
             "reference-range": (None, None),
         }
+
+    logger.info("Derived tests added successfully.")
 
     return data
 
